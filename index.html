@@ -42,6 +42,8 @@
         var f = q.get('fallback');
         var forced = (f !== null && f !== '0' && f !== 'false') || q.get('webgl') === '0' || /^(fallback|svg|static)$/i.test(q.get('renderer') || '');
         d.setAttribute('data-renderer', forced ? 'fallback' : 'pending');
+        var path = location.pathname.replace(/\/+$/, '') || '/';
+        d.setAttribute('data-route', path === '/' || path === '/index.html' ? 'home' : 'page');
         d.classList.add('js');
       })();
     </script>

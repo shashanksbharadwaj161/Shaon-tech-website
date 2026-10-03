@@ -51,7 +51,7 @@ export function Story() {
             </h2>
             <ol className="seq__chapters">
               {story.chapters.map((c, i) => (
-                <li key={c.id} className="seq__chapter" style={{ ['--ci' as string]: `var(--c${i})` }}>
+                <li key={c.id} className="seq__chapter" data-chapter-i={i} data-state={i === 0 ? 'active' : 'after'}>
                   <article aria-labelledby={`chapter-${c.id}`}>
                     <p className="seq__kicker mono">
                       <span className="seq__index">{c.index}</span>

@@ -1,20 +1,21 @@
 /**
  * All visitor-facing copy lives here so it can be edited without touching layout
  * or motion code. Keep it factual: no invented clients, testimonials, metrics,
- * studio history, city or email address. Anything that is not real client work
- * must be labelled as a studio concept.
+ * team size, founders, history, awards, address, city or email. Anything that
+ * is not real client work is labelled as a studio concept.
  */
 
-export type SectionId = 'work' | 'services' | 'lab' | 'studio' | 'start';
+export type SectionId = 'work' | 'services' | 'lab' | 'process' | 'studio' | 'start';
 
 export interface NavItem {
   id: SectionId;
   label: string;
+  href: string;
 }
 
 export interface LinkAction {
   label: string;
-  href: `#${string}`;
+  href: string;
 }
 
 export interface StoryChapter {
@@ -25,20 +26,26 @@ export interface StoryChapter {
   body: string;
 }
 
-export interface Service {
+export interface Offering {
+  id: 'websites' | 'apps';
+  index: string;
+  title: string;
+  lead: string;
+  body: string;
+  points: string[];
+}
+
+export interface ApproachStep {
+  title: string;
+  body: string;
+}
+
+export interface ProcessStage {
+  id: 'discover' | 'design' | 'develop' | 'launch';
   index: string;
   title: string;
   body: string;
-  includes: string[];
-}
-
-export interface StudioConcept {
-  index: string;
-  title: string;
-  kind: string;
-  summary: string;
-  explores: string[];
-  status: string;
+  detail: string;
 }
 
 export interface BriefStep {
@@ -53,19 +60,19 @@ export const site = {
   descriptor: 'Website and app design / development studio',
 
   nav: [
-    { id: 'work', label: 'Work' },
-    { id: 'services', label: 'Services' },
-    { id: 'lab', label: 'Lab' },
-    { id: 'studio', label: 'Studio' },
+    { id: 'work', label: 'Work', href: '/#work' },
+    { id: 'services', label: 'Services', href: '/#services' },
+    { id: 'lab', label: 'Lab', href: '/#lab' },
+    { id: 'studio', label: 'Studio', href: '/#studio' },
   ] satisfies NavItem[],
-  navCta: { label: 'Start a project', href: '#start' } satisfies LinkAction,
+  navCta: { label: 'Start a project', href: '/start-project' } satisfies LinkAction,
 
   hero: {
     labelTop: ['Website', 'and app', 'design /', 'development', 'studio'],
     headline: { lead: 'Ideas into', accent: 'living', tail: 'products', stop: '.' },
     body: 'ShaOn Tech designs and develops websites and apps. Based in Japan. Built for businesses everywhere.',
-    primary: { label: 'Start a project', href: '#start' } satisfies LinkAction,
-    secondary: { label: 'Explore the work', href: '#work' } satisfies LinkAction,
+    primary: { label: 'Start a project', href: '/start-project' } satisfies LinkAction,
+    secondary: { label: 'Explore the work', href: '/#work' } satisfies LinkAction,
     asideTop: ['Design', 'Develop', 'Launch', 'Together'],
     asideBottom: ['Ideas into', 'living products.'],
     belief: 'A more human internet builds a brighter tomorrow.',
@@ -108,103 +115,129 @@ export const site = {
     previewLabel: 'Studio concept — illustrative interface, not client work',
   },
 
-  work: {
-    eyebrow: 'Work',
-    title: 'Studio concepts',
-    intro:
-      'Self-initiated prototypes that show how we think about real product problems. They are studio concepts, not client work, and use sample data only.',
-    concepts: [
-      {
-        index: 'C—01',
-        title: 'Dashboard filtering',
-        kind: 'SaaS dashboard',
-        summary: 'Filtering a dense dashboard so results stay legible and every step can be undone.',
-        explores: ['Faceted filters', 'Saved views', 'Empty states'],
-        status: 'Interactive concept in progress',
-      },
-      {
-        index: 'C—02',
-        title: 'Variant & cart',
-        kind: 'Commerce',
-        summary: 'Choosing a product variant and editing a cart with totals that are never ambiguous.',
-        explores: ['Variant selection', 'Cart editing', 'Clear totals'],
-        status: 'Interactive concept in progress',
-      },
-      {
-        index: 'C—03',
-        title: 'Availability explorer',
-        kind: 'Hospitality',
-        summary: 'Exploring dates and rooms against sample availability data without friction.',
-        explores: ['Date ranges', 'Room comparison', 'Sample data'],
-        status: 'Interactive concept in progress',
-      },
-    ] satisfies StudioConcept[],
-  },
-
   services: {
     eyebrow: 'Services',
-    title: 'Design. Develop. Launch. Together.',
-    intro: 'ShaOn Tech designs and develops websites and apps, and takes them live with you.',
-    items: [
+    title: 'Built to be used.',
+    intro: 'Two things, made well: websites and apps. Each is designed and developed in the same studio, so the idea survives all the way to the screen.',
+    offerings: [
       {
+        id: 'websites',
         index: '01',
-        title: 'Design',
-        body: 'Websites and app interfaces: structure, visual direction and motion, shaped around the idea.',
-        includes: ['Websites', 'App interfaces', 'Motion'],
+        title: 'Websites',
+        lead: 'Sites that explain, persuade and keep working.',
+        body: 'Company, product and editorial websites with clear structure, considered motion and responsive layouts that hold up on every screen.',
+        points: ['Information architecture', 'Editorial and visual design', 'Responsive front-end build', 'Accessible, fast pages'],
       },
       {
+        id: 'apps',
         index: '02',
-        title: 'Develop',
-        body: 'The same designs built as real, responsive websites and apps — accessible and ready to grow.',
-        includes: ['Front-end', 'Responsive builds', 'Accessibility'],
+        title: 'Apps',
+        lead: 'Interfaces people return to every day.',
+        body: 'Web and mobile app interfaces — flows, components and the front-end behind them — from first prototype to a working product.',
+        points: ['Product and interaction design', 'Prototypes you can use', 'Component-based front-end', 'Iteration after launch'],
       },
-      {
-        index: '03',
-        title: 'Launch',
-        body: 'Taking the product live together, then refining it as it meets the people it was made for.',
-        includes: ['Release', 'Refinement'],
-      },
-    ] satisfies Service[],
+    ] satisfies Offering[],
+    capabilities: ['UX/UI', 'Responsive engineering', 'Interaction', 'Iteration'],
+    approachTitle: 'Our approach',
+    approach: [
+      { title: 'Design', body: 'Shape the idea into flows, structure and a visual direction.' },
+      { title: 'Develop', body: 'Build it as a real, responsive website or app.' },
+      { title: 'Launch', body: 'Take it live together, then keep refining.' },
+    ] satisfies ApproachStep[],
+    approachLink: { label: 'See the process', href: '/#process' } satisfies LinkAction,
+  },
+
+  work: {
+    eyebrow: 'Work',
+    title: 'Possibilities, made tangible.',
+    intro:
+      'Three studio concepts with working interfaces you can try. They are self-initiated explorations with sample data — not client work, real brands or real results.',
+    listTitle: 'All studio concepts',
+    open: 'Open concept',
   },
 
   lab: {
     eyebrow: 'Lab',
-    title: 'Material, light and signal.',
-    body: 'The Lab is where we test the real-time graphics behind this site: chrome, light and particle systems you will be able to tune yourself.',
-    note: 'Studio experiment — the visitor-controlled lab is being prepared.',
-    hint: 'Move across the field',
+    title: 'Make your own signal.',
+    body: 'This is the same folded S from the top of the page. Change its light, fold and signal, and the real-time scene follows.',
+    groups: {
+      light: 'Lighting',
+      form: 'Distortion',
+      signal: 'Particles',
+    },
+    pause: 'Pause lab',
+    resume: 'Resume lab',
+    reset: 'Reset to defaults',
+    staticNote: 'Showing a still version: motion is reduced or 3D is unavailable. The controls still change the drawing.',
+  },
+
+  process: {
+    eyebrow: 'Process',
+    title: 'From first thought to final detail.',
+    stages: [
+      {
+        id: 'discover',
+        index: '01',
+        title: 'Discover',
+        body: 'One line of thought: what the product is for, who it serves and what success looks like.',
+        detail: 'Goals · audience · constraints',
+      },
+      {
+        id: 'design',
+        index: '02',
+        title: 'Design',
+        body: 'The line opens into a grid — structure, flows and a visual system you can react to early.',
+        detail: 'Structure · flows · visual system',
+      },
+      {
+        id: 'develop',
+        index: '03',
+        title: 'Develop',
+        body: 'The grid becomes a working interface, built in code and tested on real screens.',
+        detail: 'Components · responsive build · testing',
+      },
+      {
+        id: 'launch',
+        index: '04',
+        title: 'Launch',
+        body: 'It settles into a finished frame: released, measured against its goals and refined.',
+        detail: 'Release · review · refinement',
+      },
+    ] satisfies ProcessStage[],
   },
 
   studio: {
     eyebrow: 'Studio',
-    title: 'An independent studio based in Japan.',
+    title: 'Based in Japan. Built for everywhere.',
     paragraphs: [
-      'ShaOn Tech designs and develops websites and apps for businesses everywhere.',
-      'From an idea to a living product — a more human internet builds a brighter tomorrow.',
+      'ShaOn Tech is an independent studio that designs and develops websites and apps for startups and businesses.',
+      'We care about a thoughtful process and useful interactions — interfaces that are clear to use, quick to load and open to everyone.',
     ],
     facts: [
       { label: 'Based in', value: 'Japan' },
-      { label: 'Practice', value: 'Websites and apps' },
-      { label: 'Studio', value: 'Independent' },
+      { label: 'Makes', value: 'Websites and apps' },
+      { label: 'For', value: 'Startups and businesses' },
     ],
   },
 
-  start: {
+  brief: {
     eyebrow: 'Start a project',
-    title: 'Tell us what you want to build.',
-    body: 'A short, three-step project brief is being prepared. It will let you describe the project, optionally share budget and timing, and review everything before exporting it.',
+    title: 'What are you imagining?',
+    body: 'Three short steps: the project, an optional budget and timing, then your details. At the end you can download the brief to keep.',
     steps: [
       { index: '01', title: 'Project & goals', body: 'What you want to make and what it should achieve.' },
       { index: '02', title: 'Budget & timing', body: 'Optional. A rough range in USD or JPY, or “not sure”.' },
-      { index: '03', title: 'Review & export', body: 'Add your name and email, check everything, then export the brief as JSON or text.' },
+      { index: '03', title: 'Review & download', body: 'Your name and email, a final check, then JSON or text files.' },
     ] satisfies BriefStep[],
-    status: 'Brief builder in preparation — this preview does not send messages yet.',
+    cta: { label: 'Start the brief', href: '/start-project' } satisfies LinkAction,
+    deliveryNote: 'Contact delivery is not connected yet. Download your brief to keep a copy.',
   },
 
   footer: {
     line: 'Ideas into living products.',
     tags: ['Japan', 'Independent', 'A brighter digital tomorrow'],
-    legal: 'Studio concepts shown on this site are self-initiated and use sample data.',
+    legal: 'Studio concepts on this site are self-initiated and use sample data.',
+    privacy: { label: 'Privacy', href: '/privacy' } satisfies LinkAction,
   },
 } as const;
 

@@ -67,7 +67,7 @@
 }
 
 .hero__title {
-  font-size: clamp(3.4rem, 7.7vw, 10rem);
+  font-size: clamp(3.4rem, 7.2vw, 9.6rem);
   font-weight: 740;
   line-height: 0.88;
   letter-spacing: -0.062em;
@@ -381,7 +381,7 @@
   left: var(--gutter);
   top: 50%;
   width: min(32vw, 470px);
-  height: 340px;
+  height: 390px;
   transform: translateY(-46%);
 }
 
@@ -390,10 +390,31 @@
   inset: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  opacity: var(--ci);
-  transform: translateY(calc((1 - var(--ci)) * 22px));
-  visibility: visible;
+  justify-content: flex-start;
+  /* Discrete narrative: one chapter at rest is fully readable. The swap is a
+     short clipped wipe — outgoing copy leaves through one edge while the
+     incoming copy enters from the other, so paragraphs never overlap. */
+  clip-path: inset(0 0 0 0);
+  transform: none;
+  transition:
+    clip-path 0.62s var(--ease-in-out),
+    transform 0.7s var(--ease-out);
+}
+
+.seq__chapter[data-state='before'] {
+  clip-path: inset(0 0 100% 0);
+  transform: translateY(-18px);
+  pointer-events: none;
+}
+
+.seq__chapter[data-state='after'] {
+  clip-path: inset(100% 0 0 0);
+  transform: translateY(18px);
+  pointer-events: none;
+}
+
+.seq__chapter[data-state='active'] {
+  transition-delay: 0.12s;
 }
 
 .seq__kicker {
@@ -532,7 +553,7 @@
   }
 
   .seq__pin {
-    --chapters-h: min(38svh, 290px);
+    --chapters-h: min(42svh, 300px);
     --chapters-bottom: calc(112px + env(safe-area-inset-bottom));
   }
 
@@ -560,6 +581,11 @@
 
   .seq__chapter {
     justify-content: flex-end;
+  }
+
+  /* Bottom-aligned copy on phones: wipe from the bottom edge upwards. */
+  .seq__chapter[data-state='before'] {
+    clip-path: inset(0 0 100% 0);
   }
 
   .seq__heading {

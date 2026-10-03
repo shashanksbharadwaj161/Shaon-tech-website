@@ -1,45 +1,76 @@
 import { site } from '../content/site';
-
-const GLYPHS = [
-  // Design: a page and its structure.
-  'M6 6h44v36H6zM6 16h44M14 24h18M14 30h26',
-  // Develop: code brackets.
-  'M18 12 6 24l12 12M38 12l12 12-12 12M32 8 24 40',
-  // Launch: the mark's 21.6° diagonal rising through a baseline.
-  'M6 42h44M10 36 46 10M36 10h10v10',
-];
+import { OfferingGraphic } from './services/OfferingGraphic';
 
 export function Services() {
   const { services } = site;
   return (
     <section id="services" className="section section--paper services" aria-labelledby="services-title">
-      <div className="services__aside" data-reveal>
+      <header className="section__head" data-reveal>
         <p className="eyebrow mono">
-          <span className="eyebrow__index">02</span>
+          <span className="eyebrow__index">01</span>
           {services.eyebrow}
         </p>
         <h2 id="services-title" className="section__title">
           {services.title}
         </h2>
         <p className="section__intro">{services.intro}</p>
-      </div>
-      <ol className="services__list">
-        {services.items.map((s, i) => (
-          <li key={s.index} className="service" data-reveal style={{ ['--d' as string]: i }}>
-            <svg viewBox="0 0 56 48" className="service__glyph" aria-hidden="true" focusable="false">
-              <path d={GLYPHS[i]} pathLength={1} />
-            </svg>
-            <p className="service__index mono">{s.index}</p>
-            <h3 className="service__title">{s.title}</h3>
-            <p className="service__body">{s.body}</p>
-            <ul className="service__tags">
-              {s.includes.map((t) => (
-                <li key={t}>{t}</li>
+      </header>
+
+      <div className="offerings">
+        {services.offerings.map((o, i) => (
+          <article key={o.id} className="offering" aria-labelledby={`offering-${o.id}`} data-reveal style={{ ['--d' as string]: i }}>
+            <div className="offering__visual">
+              <OfferingGraphic
+                kind={o.id}
+                label={
+                  o.id === 'websites'
+                    ? 'The bands of the ShaOn Tech mark unfolding into a website in a browser window'
+                    : 'The bands of the ShaOn Tech mark unfolding into an app on a phone'
+                }
+              />
+            </div>
+            <p className="offering__index mono">{o.index}</p>
+            <h3 id={`offering-${o.id}`} className="offering__title">
+              {o.title}
+            </h3>
+            <p className="offering__lead">{o.lead}</p>
+            <p className="offering__body">{o.body}</p>
+            <ul className="offering__points">
+              {o.points.map((p) => (
+                <li key={p}>{p}</li>
               ))}
             </ul>
-          </li>
+          </article>
         ))}
-      </ol>
+      </div>
+
+      <div className="capabilities" data-reveal>
+        <p className="capabilities__label mono">Across both</p>
+        <ul className="capabilities__list">
+          {services.capabilities.map((c) => (
+            <li key={c}>{c}</li>
+          ))}
+        </ul>
+      </div>
+
+      <section className="approach" aria-labelledby="approach-title" data-reveal>
+        <h3 id="approach-title" className="approach__title mono">
+          {services.approachTitle}
+        </h3>
+        <ol className="approach__list">
+          {services.approach.map((a, i) => (
+            <li key={a.title} className="approach__step">
+              <span className="approach__index mono">0{i + 1}</span>
+              <span className="approach__name">{a.title}</span>
+              <span className="approach__body">{a.body}</span>
+            </li>
+          ))}
+        </ol>
+        <a className="approach__link" href={services.approachLink.href}>
+          {services.approachLink.label}
+          <span aria-hidden="true"> →</span>
+        </a>
+      </section>
     </section>
   );
 }

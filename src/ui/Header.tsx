@@ -9,18 +9,29 @@ export function Header({ active }: { active: SectionId | null }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const toggleRef = useRef<HTMLButtonElement>(null);
 
+  const headerRef = useRef<HTMLElement>(null);
   useEffect(() => {
     let last = false;
+    let raf = 0;
+    const sheen = () => {
+      raf = 0;
+      // The liquid-glass highlight drifts with scroll (CSS var, no re-render).
+      headerRef.current?.style.setProperty('--sheen', ((window.scrollY / 1400) % 1).toFixed(3));
+    };
     const onScroll = () => {
       const next = window.scrollY > 24;
       if (next !== last) {
         last = next;
         setElevated(next);
       }
+      if (!raf) raf = requestAnimationFrame(sheen);
     };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('scroll', onScroll);
+    };
   }, []);
 
   const closeMenu = useCallback((restoreFocus: boolean) => {
@@ -34,9 +45,9 @@ export function Header({ active }: { active: SectionId | null }) {
   }, []);
 
   return (
-    <header className="site-header" data-elevated={elevated ? 'true' : 'false'}>
+    <header ref={headerRef} className="site-header" data-elevated={elevated ? 'true' : 'false'}>
       <div className="site-header__inner">
-        <a className="site-header__brand" href="#top" aria-label={`${site.name} — home`}>
+        <a className="site-header__brand" href="/#top" aria-label={`${site.name} — home`}>
           <Logo />
         </a>
         <nav className="site-nav" aria-label="Primary">
@@ -45,7 +56,7 @@ export function Header({ active }: { active: SectionId | null }) {
               <li key={item.id}>
                 <a
                   className="site-nav__link"
-                  href={`#${item.id}`}
+                  href={item.href}
                   aria-current={active === item.id ? 'true' : undefined}
                 >
                   <span className="site-nav__roll">
@@ -57,7 +68,12 @@ export function Header({ active }: { active: SectionId | null }) {
             ))}
           </ul>
           <span className="site-nav__rule" aria-hidden="true" />
-          <CtaLink href={site.navCta.href} label={site.navCta.label} size="sm" />
+          <CtaLink
+            href={site.navCta.href}
+            label={site.navCta.label}
+            size="sm"
+            className={active === 'start' ? 'is-current' : undefined}
+          />
         </nav>
         <button
           ref={toggleRef}

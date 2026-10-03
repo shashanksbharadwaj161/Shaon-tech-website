@@ -1,0 +1,450 @@
+/* =========================================================
+   Product workspace — sample task board with filters.
+   All classes are prefixed .ws- ; shared controls come from controls.css.
+   ========================================================= */
+
+.ws {
+  /* Inline-size containment: the width must come from the parent, never the content. */
+  container: ws / inline-size;
+  display: grid;
+  gap: 22px;
+  width: 100%;
+  min-width: 0;
+  padding: 20px 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background:
+    radial-gradient(120% 60% at 100% 0%, rgba(50, 108, 255, 0.07), transparent 60%),
+    var(--ink-1);
+  font-family: var(--font-sans);
+}
+
+@media (min-width: 560px) {
+  .ws {
+    padding: 28px 28px 22px;
+    gap: 26px;
+  }
+}
+
+/* ---------- Head ---------- */
+.ws-head {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.ws-head__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.ws-head__kicker {
+  color: var(--muted);
+}
+
+.ws-head__title {
+  font-size: clamp(1.6rem, 1.2rem + 2.4cqi, 2.2rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+}
+
+.ws-head__lede {
+  max-width: 62ch;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+/* ---------- Filters ---------- */
+.ws-filters {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.ws-filters__row {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+@container ws (min-width: 620px) {
+  .ws-filters__row {
+    grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.ws-search {
+  position: relative;
+  min-width: 0;
+}
+
+.ws-search__icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  color: var(--muted);
+  transform: translateY(-50%);
+  pointer-events: none;
+  transition: color 0.2s;
+}
+
+.ws-search:focus-within .ws-search__icon {
+  color: var(--accent-text);
+}
+
+.ws-search__input {
+  appearance: none;
+  padding-left: 42px;
+}
+
+.ws-search__input::-webkit-search-cancel-button {
+  cursor: pointer;
+}
+
+.ws-facet {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.ws-facet__legend {
+  float: left;
+  width: 100%;
+  padding: 0;
+}
+
+.ws-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.ws-chip {
+  min-height: 44px;
+  padding: 0 12px;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s,
+    color 0.2s,
+    transform 0.3s var(--ease-spring);
+}
+
+.ws-chip:active {
+  transform: scale(0.96);
+}
+
+.ws-chip[data-empty='true']:not([aria-pressed='true']) {
+  color: var(--muted);
+  border-style: dashed;
+}
+
+.ws-chip[aria-pressed='true'] .ws-glyph {
+  color: inherit;
+}
+
+/* ---------- Status glyphs ---------- */
+.ws-glyph {
+  flex: none;
+  color: var(--silver);
+  transition: color 0.2s;
+}
+
+.ws-glyph[data-status='in-progress'] {
+  color: var(--ice);
+}
+
+.ws-glyph[data-status='review'] {
+  color: var(--cobalt);
+}
+
+.ws-glyph[data-status='done'] {
+  color: var(--ice);
+}
+
+/* ---------- Summary ---------- */
+.ws-summary {
+  position: relative;
+  display: grid;
+  gap: 14px;
+  align-items: center;
+  padding: 16px 0 18px;
+  border-top: 1px solid var(--line);
+}
+
+@container ws (min-width: 620px) {
+  .ws-summary {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 20px;
+  }
+}
+
+.ws-summary__text {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.ws-summary__count {
+  font-size: clamp(1.15rem, 1rem + 0.6vw, 1.4rem);
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+.ws-summary__num {
+  min-width: 1ch;
+  color: var(--accent-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.ws-summary__filters {
+  color: var(--text);
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+.ws-summary__filters[data-active='false'] {
+  color: var(--muted);
+}
+
+.ws-reset {
+  justify-self: start;
+}
+
+.ws-meter {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.ws-meter span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--cobalt), var(--ice));
+  transform: scaleX(var(--ws-ratio, 1));
+  transform-origin: left;
+  transition: transform 0.6s var(--ease-out);
+}
+
+/* ---------- Board ---------- */
+.ws-results {
+  min-width: 0;
+}
+
+.ws-board {
+  display: grid;
+  gap: 22px;
+  align-items: start;
+}
+
+@container ws (min-width: 560px) {
+  .ws-board {
+    grid-template-columns: repeat(var(--ws-cols-md, 1), minmax(0, 1fr));
+    gap: 22px 14px;
+  }
+}
+
+@container ws (min-width: 900px) {
+  .ws-board {
+    grid-template-columns: repeat(var(--ws-cols, 1), minmax(0, 1fr));
+  }
+}
+
+.ws-col {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  animation: ws-enter 0.4s var(--ease-out);
+}
+
+.ws-col__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line-strong);
+  font-size: 0.95rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.ws-col__name {
+  flex: 1;
+  min-width: 0;
+}
+
+.ws-col__count {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 450;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+}
+
+.ws-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: 8px;
+}
+
+/* ---------- Cards ---------- */
+.ws-card {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px 16px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--ink-2);
+  animation: ws-enter 0.45s var(--ease-out) backwards;
+  animation-delay: calc(var(--ws-i, 0) * 32ms);
+}
+
+.ws-card__title {
+  font-size: 0.98rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.ws-mark {
+  padding: 0 1px;
+  border-radius: 3px;
+  background: rgba(138, 203, 255, 0.2);
+  color: var(--text);
+  box-shadow: inset 0 -1px 0 var(--ice);
+}
+
+.ws-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.ws-card__meta dd {
+  margin: 0;
+}
+
+.ws-card__project {
+  flex-basis: 100%;
+}
+
+.ws-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  color: var(--accent-text);
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+
+.ws-due {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.ws-due::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1px solid var(--silver);
+}
+
+.ws-due[data-due='this-week'] {
+  color: var(--text);
+}
+
+.ws-due[data-due='this-week']::before {
+  border-color: var(--ice);
+  background: var(--ice);
+}
+
+.ws-due[data-due='later']::before {
+  border-color: var(--line-strong);
+}
+
+.ws-due__label {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ---------- Empty state ---------- */
+.ws-empty {
+  animation: ws-enter 0.4s var(--ease-out);
+}
+
+.ws-empty p {
+  max-width: 58ch;
+}
+
+.ws-empty__kicker {
+  color: var(--accent-text);
+}
+
+.ws-empty__filters {
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Foot ---------- */
+.ws-foot {
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+}
+
+/* ---------- Motion ---------- */
+@keyframes ws-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* A paused animation would freeze entering content at its first frame:
+   when motion is paused, show everything in its final state instead. */
+html[data-paused='true'] .ws-col,
+html[data-paused='true'] .ws-card,
+html[data-paused='true'] .ws-empty,
+html[data-paused='true'] .ws .value-pop {
+  animation: none;
+}

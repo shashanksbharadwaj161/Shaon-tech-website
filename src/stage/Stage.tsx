@@ -54,7 +54,6 @@ export function Stage({ mode }: StageProps) {
   const [load, setLoad] = useState(false);
   const [ready, setReady] = useState(false);
   const quality = useMemo(() => qualityFor(readDeviceProfile()), []);
-  const finePointer = useMemo(() => window.matchMedia('(pointer: fine)').matches, []);
 
   useEffect(() => {
     if (renderer !== 'webgl') return;
@@ -80,7 +79,7 @@ export function Stage({ mode }: StageProps) {
           <Suspense fallback={null}>
             <StageCanvas
               animate={animate}
-              interactive={animate && finePointer && !reduced}
+              interactive={animate && !reduced}
               visible={visible}
               quality={quality}
               onReady={() => setReady(true)}

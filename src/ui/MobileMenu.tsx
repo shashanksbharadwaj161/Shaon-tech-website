@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { FoldedMark } from '../brand/FoldedMark';
 import { Logo } from '../brand/Logo';
 import { site, type SectionId } from '../content/site';
 
@@ -63,7 +64,7 @@ export function MobileMenu({ open, active, onClose }: MobileMenuProps) {
     };
   }, [open, onClose]);
 
-  const items = [...site.nav, { id: 'start' as const, label: site.navCta.label }];
+  const items = [...site.nav, { id: 'start' as const, label: site.navCta.label, href: site.navCta.href }];
 
   return (
     <div
@@ -76,6 +77,12 @@ export function MobileMenu({ open, active, onClose }: MobileMenuProps) {
       aria-label="Site menu"
       inert={!open}
     >
+      <div className="mobile-menu__planes" aria-hidden="true">
+        {[0, 1, 2, 3].map((i) => (
+          <span key={i} className={`mobile-menu__plane mobile-menu__plane--${i}`} style={{ ['--i' as string]: i }} />
+        ))}
+        <FoldedMark className="mobile-menu__watermark" />
+      </div>
       <div className="mobile-menu__bar">
         <Logo />
         <button ref={closeRef} type="button" className="menu-toggle menu-toggle--close" onClick={() => onClose(true)}>
@@ -91,7 +98,7 @@ export function MobileMenu({ open, active, onClose }: MobileMenuProps) {
           {items.map((item, i) => (
             <li key={item.id} style={{ ['--i' as string]: i }}>
               <a
-                href={`#${item.id}`}
+                href={item.href}
                 className={`mobile-menu__link${item.id === 'start' ? ' mobile-menu__link--cta' : ''}`}
                 aria-current={active === item.id ? 'true' : undefined}
                 onClick={() => onClose(false)}
@@ -99,13 +106,21 @@ export function MobileMenu({ open, active, onClose }: MobileMenuProps) {
                 <span className="mobile-menu__index mono" aria-hidden="true">
                   0{i + 1}
                 </span>
-                <span>{item.label}</span>
+                <span className="mobile-menu__label">{item.label}</span>
+                <span className="mobile-menu__arrow" aria-hidden="true">
+                  →
+                </span>
               </a>
             </li>
           ))}
         </ol>
       </nav>
-      <p className="mobile-menu__foot mono">{site.hero.body}</p>
+      <div className="mobile-menu__foot">
+        <p className="mono">{site.hero.body}</p>
+        <a href={site.footer.privacy.href} className="mobile-menu__privacy mono" onClick={() => onClose(false)}>
+          {site.footer.privacy.label}
+        </a>
+      </div>
     </div>
   );
 }

@@ -45,7 +45,7 @@ export function Studio() {
     <section id="studio" className="section section--paper studio" aria-labelledby="studio-title">
       <div className="studio__copy" data-reveal>
         <p className="eyebrow mono">
-          <span className="eyebrow__index">04</span>
+          <span className="eyebrow__index">05</span>
           {studio.eyebrow}
         </p>
         <h2 id="studio-title" className="section__title">

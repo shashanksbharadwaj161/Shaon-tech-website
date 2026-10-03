@@ -1,25 +1,15 @@
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
-import {
-  AdditiveBlending,
-  CanvasTexture,
-  Color,
-  Mesh,
-  MeshBasicMaterial,
-  PlaneGeometry,
-  SRGBColorSpace,
-  type Group,
-  type PerspectiveCamera,
-  type PointLight,
-} from 'three';
+import { type Group, type MeshBasicMaterial, type PerspectiveCamera, type PointLight } from 'three';
 import { MARK } from '../brand/markGeometry';
 import type { QualityTier } from '../lib/env';
-import { live, subscribeLive } from '../lib/liveState';
-import { damp, easeInOutCubic, lerp } from '../lib/math';
+import { live, pressEnergy, scrollVelocity, subscribeLive } from '../lib/liveState';
+import { clamp, damp, easeInOutCubic, lerp } from '../lib/math';
 import { heroPose, mixPose, storyPose, type ScreenPose } from '../lib/stagePose';
 import { createRibbonGeometry } from './ribbonGeometry';
 import { createChromeMaterial } from './ribbonShader';
 import { createSignalParticles } from './signalParticles';
+import { createGlow } from './glow';
 import { createStudioEnvironment } from './studioEnvironment';
 
 export const CAM_Z = 10;
@@ -33,40 +23,6 @@ export interface ExperienceProps {
   interactive: boolean;
   quality: QualityTier;
   onFirstFrame: () => void;
-}
-
-function createGlow(): { mesh: Mesh; dispose: () => void } {
-  const c = document.createElement('canvas');
-  c.width = c.height = 128;
-  const ctx = c.getContext('2d')!;
-  const grad = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
-  grad.addColorStop(0, 'rgba(255,255,255,1)');
-  grad.addColorStop(0.35, 'rgba(255,255,255,0.35)');
-  grad.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, 128, 128);
-  const texture = new CanvasTexture(c);
-  texture.colorSpace = SRGBColorSpace;
-  const geometry = new PlaneGeometry(1, 1);
-  const material = new MeshBasicMaterial({
-    map: texture,
-    color: new Color('#326CFF'),
-    transparent: true,
-    opacity: 0.5,
-    blending: AdditiveBlending,
-    depthWrite: false,
-    toneMapped: false,
-  });
-  const mesh = new Mesh(geometry, material);
-  mesh.renderOrder = -1;
-  return {
-    mesh,
-    dispose: () => {
-      texture.dispose();
-      geometry.dispose();
-      material.dispose();
-    },
-  };
 }
 
 export function Experience({ animate, interactive, quality, onFirstFrame }: ExperienceProps) {
@@ -142,8 +98,13 @@ export function Experience({ animate, interactive, quality, onFirstFrame }: Expe
     // Pointer, damped. Snaps when motion is not animated so a single demand frame is final.
     const tx = interactive && live.pointer.active ? live.pointer.x : 0;
     const ty = interactive && live.pointer.active ? live.pointer.y : 0;
-    s.px = animate ? damp(s.px, tx, 2.6, dt) : tx;
-    s.py = animate ? damp(s.py, ty, 2.6, dt) : ty;
+    // Touch gets a slightly softer follow, so a finger lifting off settles with inertia.
+    const follow = live.pointer.kind === 'touch' ? 1.7 : 2.6;
+    s.px = animate ? damp(s.px, tx, follow, dt) : tx;
+    s.py = animate ? damp(s.py, ty, follow, dt) : ty;
+    // A tap or press pulses the light; native scroll speed adds a restrained twist.
+    const energy = interactive ? pressEnergy() : 0;
+    const sv = interactive ? clamp(scrollVelocity() / 2400, -1, 1) : 0;
 
     const u = f.unfold;
     const ue = easeInOutCubic(u);
@@ -159,7 +120,7 @@ export function Experience({ animate, interactive, quality, onFirstFrame }: Expe
     g.scale.setScalar(pose.h * lerp(1, 0.62, ue));
     g.rotation.set(
       (0.07 * Math.sin(t * 0.27) - s.py * 0.18) * idle,
-      (-0.42 + 0.2 * Math.sin(t * 0.31) + s.px * 0.32) * (1 - 0.9 * ue) + 0.12 * Math.sin(Math.PI * u),
+      (-0.42 + 0.2 * Math.sin(t * 0.31) + s.px * 0.32 + sv * 0.16) * (1 - 0.9 * ue) + 0.12 * Math.sin(Math.PI * u),
       (-0.035 + 0.025 * Math.sin(t * 0.21)) * idle,
     );
     g.updateMatrixWorld();
@@ -167,9 +128,9 @@ export function Experience({ animate, interactive, quality, onFirstFrame }: Expe
     // --- Material ---------------------------------------------------------
     const cu = assets.chrome.uniforms;
     cu.uBend.value = Math.PI * (1 - ue) - 0.07 * (1 + Math.sin(t * 0.75)) * idle;
-    cu.uTwist.value = 0.045 * Math.sin(t * 0.5) * idle + 0.2 * Math.sin(Math.PI * u);
+    cu.uTwist.value = (0.045 * Math.sin(t * 0.5) + sv * 0.07) * idle + 0.2 * Math.sin(Math.PI * u);
     cu.uDissolve.value = r * 1.14;
-    cu.uRim.value = 0.45 + 0.45 * u + 0.9 * r;
+    cu.uRim.value = 0.45 + 0.45 * u + 0.9 * r + energy * 0.75 * (1 - r);
     cu.uEdgeGlow.value = 0.28 + 0.75 * u;
     scene.environmentRotation.set(s.py * 0.18, 0.3 * Math.sin(t * 0.11) + s.px * 0.55 + f.q * 1.5 + f.hero * 0.6, 0);
 
@@ -200,7 +161,7 @@ export function Experience({ animate, interactive, quality, onFirstFrame }: Expe
     const glow = assets.glow.mesh;
     glow.position.set(pose.x + s.px * 0.25, pose.y - pose.h * 0.05 + s.py * 0.2, -1.6);
     glow.scale.setScalar(pose.h * (2.6 + 0.8 * u));
-    (glow.material as MeshBasicMaterial).opacity = (0.42 + 0.25 * u) * (1 - r * 0.85);
+    (glow.material as MeshBasicMaterial).opacity = (0.42 + 0.25 * u + energy * 0.22) * (1 - r * 0.85);
 
     // --- Camera: orbit in while unfolding, drift back for the field, rest for the product.
     const c1 = u * (1 - r);
@@ -217,7 +178,7 @@ export function Experience({ animate, interactive, quality, onFirstFrame }: Expe
     // --- Pointer light: a cobalt bounce that follows the visitor ------------
     if (light.current) {
       light.current.position.set(s.px * halfW * 0.85, s.py * halfH * 0.85, 2.6);
-      light.current.intensity = (interactive ? 26 : 12) * (1 - r);
+      light.current.intensity = ((interactive ? 26 : 12) + energy * 46) * (1 - r);
     }
 
     // --- Adaptive quality ----------------------------------------------------

@@ -8,11 +8,13 @@
  */
 import { clamp01, damp, range01, smoothstep } from './math';
 
-/** Chapter boundaries in sequence progress. */
+/**
+ * Chapter boundaries in sequence progress. Copy is discrete: exactly one
+ * chapter is active (and fully readable) at any progress; the swap itself is a
+ * short time-based clipped transition, while the geometry stays continuous.
+ */
 export const CHAPTER_BOUNDS = [0, 0.25, 0.5, 0.74, 1] as const;
 export const CHAPTER_COUNT = 4;
-/** Width of each chapter's fade-out / fade-in (they never overlap). */
-const CHAPTER_FADE = 0.04;
 
 export interface StoryFrame {
   /** 0 at the top of the page → 1 once the hero has scrolled away. */
@@ -29,8 +31,7 @@ export interface StoryFrame {
   wire: number;
   /** The real interface fills the wireframe. */
   product: number;
-  /** Opacity of each chapter's copy. */
-  chapters: [number, number, number, number];
+  /** The one chapter whose copy is shown. */
   activeChapter: 0 | 1 | 2 | 3;
 }
 
@@ -41,12 +42,9 @@ export function chapterIndexAt(q: number): 0 | 1 | 2 | 3 {
   return 3;
 }
 
-function chapterOpacity(i: number, q: number): number {
-  const start = CHAPTER_BOUNDS[i]!;
-  const end = CHAPTER_BOUNDS[i + 1]!;
-  const fadeIn = i === 0 ? 1 : smoothstep(start, start + CHAPTER_FADE, q);
-  const fadeOut = i === CHAPTER_COUNT - 1 ? 1 : 1 - smoothstep(end - CHAPTER_FADE, end, q);
-  return fadeIn * fadeOut;
+/** Position of chapter `i` relative to the active one, for the clipped swap. */
+export function chapterState(i: number, active: number): 'before' | 'active' | 'after' {
+  return i < active ? 'before' : i > active ? 'after' : 'active';
 }
 
 export function storyFrame(heroProgress: number, sequenceProgress: number): StoryFrame {
@@ -60,7 +58,6 @@ export function storyFrame(heroProgress: number, sequenceProgress: number): Stor
     structure: smoothstep(0.46, 0.7, q),
     wire: range01(0.52, 0.8, q),
     product: smoothstep(0.73, 0.94, q),
-    chapters: [chapterOpacity(0, q), chapterOpacity(1, q), chapterOpacity(2, q), chapterOpacity(3, q)],
     activeChapter: chapterIndexAt(q),
   };
 }

@@ -16,8 +16,8 @@ export function heroPose(width: number, height: number): ScreenPose {
   const aspect = width / height;
   if (aspect < 0.75) return { x: 0.6, y: 0.29, h: 0.32 };
   if (aspect < 1.15) return { x: 0.63, y: 0.36, h: 0.44 };
-  if (aspect < 1.5) return { x: 0.7, y: 0.48, h: 0.56 };
-  return { x: 0.71, y: 0.51, h: 0.63 };
+  if (aspect < 1.5) return { x: 0.71, y: 0.48, h: 0.55 };
+  return { x: 0.725, y: 0.51, h: 0.62 };
 }
 
 export function storyPose(width: number, height: number, preview: PreviewRect | null): ScreenPose {

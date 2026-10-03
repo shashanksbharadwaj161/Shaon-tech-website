@@ -7,10 +7,6 @@
   --structure: 0;
   --wire: 0;
   --product: 0;
-  --c0: 1;
-  --c1: 0;
-  --c2: 0;
-  --c3: 0;
   position: relative;
   isolation: isolate;
 }

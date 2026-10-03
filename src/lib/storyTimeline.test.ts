@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { approach, CHAPTER_BOUNDS, progressFromScroll, storyFrame, type StoryFrame } from './storyTimeline';
+import { approach, CHAPTER_BOUNDS, chapterState, progressFromScroll, storyFrame, type StoryFrame } from './storyTimeline';
 
 const DRIVERS: (keyof StoryFrame)[] = ['unfold', 'release', 'structure', 'wire', 'product'];
 const steps = (n: number) => Array.from({ length: n + 1 }, (_, i) => i / n);
@@ -12,8 +12,8 @@ describe('story timeline', () => {
       expect(start[k]).toBe(0);
       expect(end[k]).toBe(1);
     }
-    expect(start.chapters).toEqual([1, 0, 0, 0]);
-    expect(end.chapters).toEqual([0, 0, 0, 1]);
+    expect(start.activeChapter).toBe(0);
+    expect(end.activeChapter).toBe(3);
   });
 
   it('clamps out-of-range scroll (overscroll, rubber-banding)', () => {
@@ -36,21 +36,33 @@ describe('story timeline', () => {
       const a = storyFrame(1, qs[i - 1]!);
       const b = storyFrame(1, qs[i]!);
       for (const k of DRIVERS) expect(Math.abs((b[k] as number) - (a[k] as number))).toBeLessThan(0.02);
-      b.chapters.forEach((c, j) => expect(Math.abs(c - a.chapters[j]!)).toBeLessThan(0.05));
     }
   });
 
-  it('never shows two chapters of copy at once, and shows each one fully mid-chapter', () => {
-    for (const q of steps(1000)) {
-      const visible = storyFrame(1, q).chapters.filter((c) => c > 0.001);
-      expect(visible.length).toBeLessThanOrEqual(1);
+  it('always has exactly one readable chapter — including right at the boundaries', () => {
+    let prev = 0;
+    for (const q of steps(4000)) {
+      const { activeChapter } = storyFrame(1, q);
+      expect([0, 1, 2, 3]).toContain(activeChapter);
+      expect(activeChapter).toBeGreaterThanOrEqual(prev); // a step function of scroll
+      expect(activeChapter - prev).toBeLessThanOrEqual(1); // never skips a chapter
+      prev = activeChapter;
     }
     for (let i = 0; i < 4; i++) {
       const mid = (CHAPTER_BOUNDS[i]! + CHAPTER_BOUNDS[i + 1]!) / 2;
-      const f = storyFrame(1, mid);
-      expect(f.chapters[i]).toBe(1);
-      expect(f.activeChapter).toBe(i);
+      expect(storyFrame(1, mid).activeChapter).toBe(i);
     }
+    // Stopping exactly on a boundary, or a hair either side, still shows one chapter.
+    for (const b of CHAPTER_BOUNDS.slice(1, -1)) {
+      for (const q of [b - 1e-6, b, b + 1e-6]) {
+        const states = [0, 1, 2, 3].map((i) => chapterState(i, storyFrame(1, q).activeChapter));
+        expect(states.filter((st) => st === 'active')).toHaveLength(1);
+      }
+    }
+  });
+
+  it('places earlier chapters before and later chapters after the active one (wipe direction)', () => {
+    expect([0, 1, 2, 3].map((i) => chapterState(i, 2))).toEqual(['before', 'before', 'active', 'after']);
   });
 
   it('maps document scroll to hero and sequence progress', () => {

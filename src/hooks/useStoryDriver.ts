@@ -1,6 +1,6 @@
 import { useEffect, type RefObject } from 'react';
 import { live, notifyLive, setPreviewRect } from '../lib/liveState';
-import { approach, progressFromScroll, storyFrame, type StoryFrame, type StoryMetrics } from '../lib/storyTimeline';
+import { approach, chapterState, progressFromScroll, storyFrame, type StoryFrame, type StoryMetrics } from '../lib/storyTimeline';
 
 interface DriverRefs {
   root: RefObject<HTMLElement | null>;
@@ -18,10 +18,6 @@ const VARS: [string, (f: StoryFrame) => number][] = [
   ['--structure', (f) => f.structure],
   ['--wire', (f) => f.wire],
   ['--product', (f) => f.product],
-  ['--c0', (f) => f.chapters[0]],
-  ['--c1', (f) => f.chapters[1]],
-  ['--c2', (f) => f.chapters[2]],
-  ['--c3', (f) => f.chapters[3]],
 ];
 
 /**
@@ -50,6 +46,9 @@ export function useStoryDriver(refs: DriverRefs, enabled: boolean, smooth: boole
       if (frame.activeChapter !== lastChapter) {
         lastChapter = frame.activeChapter;
         root.dataset.chapter = String(frame.activeChapter);
+        root.querySelectorAll<HTMLElement>('[data-chapter-i]').forEach((el) => {
+          el.dataset.state = chapterState(Number(el.dataset.chapterI), frame.activeChapter);
+        });
       }
       notifyLive();
     };
