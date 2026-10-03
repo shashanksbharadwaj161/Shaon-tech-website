@@ -1,0 +1,38 @@
+:root {
+  /* Brand palette (approved board) */
+  --ink: #07090d;
+  --paper: #f4f7fb;
+  --cobalt: #326cff;
+  --ice: #8acbff;
+  --silver: #aab5c7;
+
+  /* Derived */
+  --ink-1: #0b0e15;
+  --ink-2: #10151f;
+  --ink-3: #171e2c;
+  --paper-2: #e7ecf3;
+  --cobalt-strong: #2c60f2; /* white text on this ≥ 4.5:1 */
+  --cobalt-deep: #1f4fd8; /* cobalt text on paper ≥ 4.5:1 */
+  --muted-on-ink: #8f9aae; /* ≈ 7:1 on ink */
+  --muted-on-paper: #4a5466; /* ≈ 7.4:1 on paper */
+  --line-on-ink: rgba(170, 181, 199, 0.16);
+  --line-on-ink-strong: rgba(170, 181, 199, 0.32);
+  --line-on-paper: rgba(7, 9, 13, 0.14);
+
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+
+  --gutter: clamp(20px, 4.4vw, 76px);
+  --header-h: 72px;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+
+  color-scheme: dark;
+}
+
+@media (max-width: 719px) {
+  :root {
+    --header-h: 64px;
+  }
+}

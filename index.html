@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en" data-motion="full" data-paused="false" data-renderer="pending">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>ShaOn Tech — Ideas into living products</title>
+    <meta
+      name="description"
+      content="ShaOn Tech designs and develops websites and apps. Based in Japan. Built for businesses everywhere."
+    />
+    <meta name="theme-color" content="#07090D" />
+    <meta name="color-scheme" content="dark light" />
+    <meta property="og:title" content="ShaOn Tech — Ideas into living products" />
+    <meta
+      property="og:description"
+      content="ShaOn Tech designs and develops websites and apps. Based in Japan. Built for businesses everywhere."
+    />
+    <meta property="og:type" content="website" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <script>
+      // Boot switches, applied before first paint so CSS matches immediately.
+      // Mirrors src/lib/env.ts (?motion=reduce|full, ?fallback=1, ?renderer=...).
+      (function () {
+        var d = document.documentElement;
+        var q = new URLSearchParams(location.search);
+        var m = (q.get('motion') || '').toLowerCase();
+        var rm = q.get('reduced-motion');
+        var reduced = m === 'reduce' || m === 'reduced' || m === 'static' || (rm !== null && rm !== '0' && rm !== 'false');
+        if (!reduced && m !== 'full' && m !== 'on') {
+          try {
+            reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          } catch (e) {}
+        }
+        d.setAttribute('data-motion', reduced ? 'reduced' : 'full');
+        var paused = false;
+        try {
+          paused = sessionStorage.getItem('shaon:motion-paused') === '1';
+        } catch (e) {}
+        d.setAttribute('data-paused', paused ? 'true' : 'false');
+        var f = q.get('fallback');
+        var forced = (f !== null && f !== '0' && f !== 'false') || q.get('webgl') === '0' || /^(fallback|svg|static)$/i.test(q.get('renderer') || '');
+        d.setAttribute('data-renderer', forced ? 'fallback' : 'pending');
+        d.classList.add('js');
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>
+      <div class="noscript">
+        <p><strong>ShaOn Tech</strong> designs and develops websites and apps. Based in Japan. Built for businesses everywhere.</p>
+      </div>
+    </noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,206 @@
+/* ---------- Story wrapper: one stage behind hero + sequence ---------- */
+.story {
+  --hero: 0;
+  --q: 0;
+  --unfold: 0;
+  --release: 0;
+  --structure: 0;
+  --wire: 0;
+  --product: 0;
+  --c0: 1;
+  --c1: 0;
+  --c2: 0;
+  --c3: 0;
+  position: relative;
+  isolation: isolate;
+}
+
+.story__stage {
+  position: sticky;
+  top: 0;
+  z-index: 0;
+  height: 100vh;
+  height: 100lvh;
+  margin-bottom: -100vh;
+  margin-bottom: -100lvh;
+  pointer-events: none;
+}
+
+.story__content {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------- Stage ---------- */
+.stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.stage__backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(70% 70% at 68% 46%, rgba(50, 108, 255, 0.16), transparent 62%),
+    radial-gradient(40% 50% at 70% 92%, rgba(50, 108, 255, 0.14), transparent 70%),
+    radial-gradient(120% 90% at 50% 120%, #0d1424 0%, transparent 60%),
+    linear-gradient(180deg, #06080c 0%, #07090d 60%, #080b12 100%);
+}
+
+/* The light pool drifts with the story, connecting hero and sequence. */
+.stage__backdrop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(50% 45% at calc(66% - var(--hero) * 4%) calc(52% - var(--release) * 6%), rgba(138, 203, 255, 0.08), transparent 70%);
+  opacity: calc(1 - var(--product) * 0.6);
+}
+
+.stage__canvas {
+  position: absolute !important;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1.1s var(--ease-out);
+}
+
+.stage[data-ready='true'] .stage__canvas {
+  opacity: 1;
+}
+
+.stage__vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 90% at 60% 50%, transparent 55%, rgba(4, 5, 8, 0.75) 100%),
+    linear-gradient(180deg, rgba(7, 9, 13, 0.55) 0%, transparent 16%, transparent 84%, rgba(7, 9, 13, 0.6) 100%);
+}
+
+.stage[data-mode='static'] {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+/* ---------- SVG / CSS fallback ---------- */
+.fallback {
+  --sx: 0.665;
+  --sy: 0.5;
+  --sh: 0.74;
+  --px: 0;
+  --py: 0;
+  position: absolute;
+  inset: 0;
+  transition:
+    opacity 0.9s var(--ease-out),
+    visibility 0s linear 0.9s;
+}
+
+.fallback[data-hidden='true'] {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.fallback[data-hidden='true'] * {
+  animation-play-state: paused !important;
+}
+
+.fallback__glow {
+  position: absolute;
+  left: calc(var(--sx) * 100%);
+  top: calc(var(--sy) * 100%);
+  width: calc(var(--sh) * 150vh);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(closest-side, rgba(50, 108, 255, 0.42), rgba(50, 108, 255, 0.1) 55%, transparent);
+  opacity: calc(1 - var(--release) * 0.8);
+  filter: blur(6px);
+}
+
+.fallback__mark-wrap {
+  position: absolute;
+  left: calc(var(--sx) * 100%);
+  top: calc(var(--sy) * 100%);
+  height: calc(var(--sh) * 100%);
+  aspect-ratio: 0.881;
+  transform: translate(-50%, -50%) perspective(1100px) rotateY(calc(-16deg + var(--px) * 12deg + var(--unfold) * 16deg))
+    rotateX(calc(var(--py) * -8deg));
+  opacity: calc(1 - var(--release));
+}
+
+.fallback__mark {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 18px rgba(50, 108, 255, 0.45)) drop-shadow(0 30px 40px rgba(0, 0, 0, 0.6));
+  animation: fallback-drift 11s var(--ease-in-out) infinite alternate;
+}
+
+@keyframes fallback-drift {
+  0% {
+    transform: rotate(-1.5deg) translateY(1.2%);
+  }
+  100% {
+    transform: rotate(1.5deg) translateY(-1.2%);
+  }
+}
+
+.fallback__floor {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: -9%;
+  height: 12%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(50, 108, 255, 0.55), transparent);
+  filter: blur(10px);
+  opacity: calc(0.8 - var(--unfold) * 0.8);
+}
+
+/* The two ribbons slide apart along the mark's diagonal as it "unfolds". */
+.fallback .mark__ribbon {
+  transition: none;
+}
+
+.fallback .mark__ribbon--upper {
+  transform: translate(calc(var(--unfold) * -26px), calc(var(--unfold) * 10px)) scale(calc(1 + var(--unfold) * 0.18), calc(1 - var(--unfold) * 0.12));
+  transform-origin: 30px 40px;
+}
+
+.fallback .mark__ribbon--lower {
+  transform: translate(calc(var(--unfold) * 26px), calc(var(--unfold) * -10px)) scale(calc(1 + var(--unfold) * 0.18), calc(1 - var(--unfold) * 0.12));
+  transform-origin: 58px 60px;
+}
+
+.mark__sweep {
+  animation: mark-sweep 5.5s var(--ease-in-out) infinite;
+}
+
+@keyframes mark-sweep {
+  0%,
+  35% {
+    transform: translateX(0) skewX(-18deg);
+  }
+  75%,
+  100% {
+    transform: translateX(170px) skewX(-18deg);
+  }
+}
+
+.fallback__lanes {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: calc(var(--release) * (1 - var(--structure)));
+}
+
+.lanes__lane {
+  animation: lane-flow linear infinite;
+}
+
+@keyframes lane-flow {
+  to {
+    stroke-dashoffset: -480;
+  }
+}
