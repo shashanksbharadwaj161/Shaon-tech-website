@@ -1,0 +1,33 @@
+{
+  "brandReference": "User supplied approved Folded Signal moodboard",
+  "generationMode": "OpenAI image_gen",
+  "factualStatus": "All depicted products and environments are imaginary studio concepts, not clients or real properties",
+  "palette": [
+    "#07090D",
+    "#F4F7FB",
+    "#326CFF",
+    "#8ACBFF",
+    "#AAB5C7"
+  ],
+  "assets": [
+    {
+      "name": "form-lamp-silver",
+      "purpose": "Objects commerce concept",
+      "width": 1254,
+      "height": 1254
+    },
+    {
+      "name": "still-pavilion-blue",
+      "purpose": "Hospitality stay concept",
+      "width": 1672,
+      "height": 941
+    }
+  ],
+  "widthVariants": [
+    640,
+    960,
+    1680
+  ],
+  "variantNote": "Large variant names are ceilings; real master dimensions respected without enlargement",
+  "video": "Omni shot exists in Flow but is not downloaded, accepted, or integrated yet"
+}
