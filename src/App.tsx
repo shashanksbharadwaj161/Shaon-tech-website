@@ -13,7 +13,6 @@ import { routeKey, routeTitle, type Route } from './router/routes';
 import { Footer } from './sections/Footer';
 import { DebugReadout } from './ui/DebugReadout';
 import { Header } from './ui/Header';
-import { MotionToggle } from './ui/MotionToggle';
 
 const CasePage = lazy(() => import('./pages/CasePage'));
 const StartProjectPage = lazy(() => import('./pages/StartProjectPage'));
@@ -68,7 +67,6 @@ function Shell() {
         <RouteView key={key} route={route} />
       </main>
       <Footer />
-      <MotionToggle />
       {switches.debug && <DebugReadout />}
     </>
   );

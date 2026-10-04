@@ -14,8 +14,8 @@ const FOCUSABLE = 'a[href], button:not([disabled])';
 
 /**
  * Full-screen navigation dialog for small screens: focus moves in on open, Tab
- * is trapped, Escape closes and returns focus to the Menu button, the page
- * behind is inert and does not scroll.
+ * is trapped, Escape closes and returns focus to the Menu button, the page and
+ * header row behind are inert and the page does not scroll.
  */
 export function MobileMenu({ open, active, onClose }: MobileMenuProps) {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -27,8 +27,11 @@ export function MobileMenu({ open, active, onClose }: MobileMenuProps) {
     root.classList.add('is-menu-open');
     const main = document.getElementById('main');
     const footer = document.querySelector<HTMLElement>('.site-footer');
+    // The header row (Menu, motion control) sits behind the opaque dialog.
+    const headerRow = panelRef.current?.parentElement?.querySelector<HTMLElement>('.site-header__inner') ?? null;
     main?.setAttribute('inert', '');
     footer?.setAttribute('inert', '');
+    headerRow?.setAttribute('inert', '');
     panelRef.current?.querySelector('.mobile-menu__scroll')?.scrollTo(0, 0);
     const focusTimer = window.setTimeout(() => closeRef.current?.focus(), 30);
 
@@ -62,6 +65,7 @@ export function MobileMenu({ open, active, onClose }: MobileMenuProps) {
       root.classList.remove('is-menu-open');
       main?.removeAttribute('inert');
       footer?.removeAttribute('inert');
+      headerRow?.removeAttribute('inert');
     };
   }, [open, onClose]);
 

@@ -3,6 +3,7 @@ import { Logo } from '../brand/Logo';
 import { site, type SectionId } from '../content/site';
 import { CtaLink } from './CtaLink';
 import { MobileMenu } from './MobileMenu';
+import { MotionToggle } from './MotionToggle';
 
 export function Header({ active }: { active: SectionId | null }) {
   const [elevated, setElevated] = useState(false);
@@ -81,6 +82,7 @@ export function Header({ active }: { active: SectionId | null }) {
     document.documentElement.classList.remove('is-menu-open');
     document.getElementById('main')?.removeAttribute('inert');
     document.querySelector('.site-footer')?.removeAttribute('inert');
+    headerRef.current?.querySelector('.site-header__inner')?.removeAttribute('inert');
     if (restoreFocus) requestAnimationFrame(() => toggleRef.current?.focus());
   }, []);
 
@@ -115,6 +117,9 @@ export function Header({ active }: { active: SectionId | null }) {
             className={active === 'start' ? 'is-current' : undefined}
           />
         </nav>
+        {/* One motion control: in this nav row on phones/tablets (never over page
+            controls); a floating pill at the bottom right on desktop (CSS). */}
+        <MotionToggle />
         <button
           ref={toggleRef}
           type="button"

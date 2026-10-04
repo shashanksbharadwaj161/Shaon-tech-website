@@ -174,7 +174,9 @@ Large progress jumps snap instead of animating through the story.
 - **Reduced motion** is resolved before first paint (boot script + CSS +
   `MotionProvider`). The hero shows one still WebGL frame and the story becomes
   four stacked chapters with still illustrations, including the full interface.
-- **Pause / resume** (bottom-right, always visible) stops all autonomous motion:
+- **Pause / resume** (always visible: in the glass nav row beside Menu on phones
+  and tablets, so it never covers page controls; a bottom-right pill on desktop)
+  stops all autonomous motion:
   idle drift, particle flow, shimmer, CSS loops. Scroll-linked changes still
   follow the visitor's own scrolling. The choice lasts for the session.
 - **Fallback**: shown instantly while three.js loads; used permanently if WebGL

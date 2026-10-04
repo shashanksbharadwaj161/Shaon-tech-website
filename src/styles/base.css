@@ -270,7 +270,8 @@ html[data-paused='true'] *::after {
 @media (max-width: 959px) {
   .site-header {
     height: calc(var(--header-h) + 10px);
-    padding: max(8px, env(safe-area-inset-top)) 10px 0;
+    /* Landscape notches: keep the whole row (Menu, motion control) in the safe area. */
+    padding: max(8px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) 0 max(10px, env(safe-area-inset-left));
   }
 
   .site-header__inner {
@@ -950,7 +951,7 @@ html[data-motion='reduced'] .mobile-menu * {
   }
 }
 
-/* ---------- Motion toggle (always visible) ---------- */
+/* ---------- Motion toggle (always visible): floating pill on desktop ---------- */
 .motion-toggle {
   position: fixed;
   right: max(14px, env(safe-area-inset-right));
@@ -985,18 +986,84 @@ html[data-motion='reduced'] .mobile-menu * {
   color: #fff;
 }
 
-@media (max-width: 719px) {
-  /* Status only (nothing to press): a small dot that stays out of the way. */
-  .motion-toggle--status {
-    width: 28px;
-    min-height: 28px;
-    height: 28px;
+/* Phones and tablets: the control lives in the glass nav row, left of Menu, so
+   it never covers page controls and is always reachable; the pill keeps it
+   readable over paper and ink. Icon-only, with its full name kept for
+   assistive tech. */
+@media (max-width: 959px) {
+  .site-header__inner {
+    column-gap: 6px;
+  }
+
+  .site-header .motion-toggle {
+    position: relative;
+    inset: auto;
+    z-index: auto;
+    flex: none;
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
     padding: 0;
     justify-content: center;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .site-header .motion-toggle__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .site-header .motion-toggle__glyph {
+    width: 36px;
+    height: 36px;
+    border: 1px solid rgba(138, 203, 255, 0.28);
+    background: linear-gradient(160deg, rgba(50, 108, 255, 0.28), rgba(7, 9, 13, 0.2));
+    color: var(--paper);
+    transition:
+      border-color 0.3s,
+      background-color 0.3s,
+      transform 0.35s var(--ease-spring);
+  }
+
+  .site-header .motion-toggle:active .motion-toggle__glyph {
+    transform: scale(0.92);
+  }
+
+  /* Paused: the glyph turns solid cobalt (play icon) so the state reads at a glance. */
+  .site-header .motion-toggle[data-paused='true'] .motion-toggle__glyph {
+    border-color: var(--ice);
+    background: var(--cobalt-strong);
+    color: #fff;
+  }
+
+  /* Reduced motion: nothing to press, just a quiet status dot. */
+  .site-header .motion-toggle--status {
+    width: 28px;
+    height: 28px;
+    min-height: 28px;
+    margin: 0 4px;
     opacity: 0.85;
   }
+}
 
-  .motion-toggle--status .motion-toggle__label {
+@media (max-width: 959px) and (hover: hover) {
+  .site-header .motion-toggle:hover .motion-toggle__glyph {
+    border-color: var(--ice);
+  }
+}
+
+/* Very narrow phones: Menu shows its icon only, so the row still fits. */
+@media (max-width: 359px) {
+  .site-header .menu-toggle:not(.menu-toggle--close) .menu-toggle__label {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -1005,24 +1072,8 @@ html[data-motion='reduced'] .mobile-menu * {
     white-space: nowrap;
   }
 
-  .motion-toggle:not(.motion-toggle--status) {
-    padding: 0;
-    width: 44px;
-    justify-content: center;
-  }
-
-  .motion-toggle:not(.motion-toggle--status) .motion-toggle__label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
-  }
-
-  .motion-toggle__glyph {
-    width: 30px;
-    height: 30px;
+  .site-header .menu-toggle:not(.menu-toggle--close) {
+    padding-left: 0;
   }
 }
 
