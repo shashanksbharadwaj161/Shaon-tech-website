@@ -1,7 +1,9 @@
-import { useEffect, useRef } from 'react';
-import { FoldedMark } from '../brand/FoldedMark';
+import { useEffect, useRef, useState } from 'react';
 import { Logo } from '../brand/Logo';
 import { site, type SectionId } from '../content/site';
+import { useMotion } from '../motion/MotionProvider';
+import { MenuSignal } from './MenuSignal';
+import '../styles/menu-signal.css';
 
 interface MobileMenuProps {
   open: boolean;
@@ -11,6 +13,14 @@ interface MobileMenuProps {
 }
 
 const FOCUSABLE = 'a[href], button:not([disabled])';
+const DETAILS: Record<SectionId, string> = {
+  work: 'Studio concepts',
+  services: 'Websites and apps',
+  lab: 'Light · fold · signal',
+  studio: 'Japan · independent',
+  start: 'Project brief',
+  process: 'Design · develop · launch',
+};
 
 /**
  * Full-screen navigation dialog for small screens: focus moves in on open, Tab
@@ -20,6 +30,21 @@ const FOCUSABLE = 'a[href], button:not([disabled])';
 export function MobileMenu({ open, active, onClose }: MobileMenuProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const { animate } = useMotion();
+  const [selected, setSelected] = useState<SectionId>(active && active !== 'process' ? active : 'work');
+  const [visible, setVisible] = useState(() => !document.hidden);
+
+  useEffect(() => {
+    if (open) setSelected(active && active !== 'process' ? active : 'work');
+  }, [open, active]);
+
+  useEffect(() => {
+    if (!open) return;
+    const visibility = () => setVisible(!document.hidden);
+    visibility();
+    document.addEventListener('visibilitychange', visibility);
+    return () => document.removeEventListener('visibilitychange', visibility);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -76,8 +101,9 @@ export function MobileMenu({ open, active, onClose }: MobileMenuProps) {
     <div
       ref={panelRef}
       id="mobile-menu"
-      className="mobile-menu"
+      className="mobile-menu mobile-menu--gallery"
       data-open={open ? 'true' : 'false'}
+      data-animate={String(open && animate && visible)}
       role="dialog"
       aria-modal="true"
       aria-label="Site menu"
@@ -87,7 +113,6 @@ export function MobileMenu({ open, active, onClose }: MobileMenuProps) {
         {[0, 1, 2, 3].map((i) => (
           <span key={i} className={`mobile-menu__plane mobile-menu__plane--${i}`} style={{ ['--i' as string]: i }} />
         ))}
-        <FoldedMark className="mobile-menu__watermark" />
       </div>
       <div className="mobile-menu__bar">
         <Logo />
@@ -110,12 +135,20 @@ export function MobileMenu({ open, active, onClose }: MobileMenuProps) {
                   href={item.href}
                   className={`mobile-menu__link${item.id === 'start' ? ' mobile-menu__link--cta' : ''}`}
                   aria-current={active === item.id ? 'true' : undefined}
+                  data-selected={String(selected === item.id)}
+                  onFocus={() => setSelected(item.id)}
+                  onPointerEnter={() => setSelected(item.id)}
+                  onPointerDown={() => setSelected(item.id)}
                   onClick={() => onClose(false)}
                 >
-                  <span className="mobile-menu__index mono" aria-hidden="true">
-                    0{i + 1}
+                  <MenuSignal destination={item.id} selected={selected === item.id} />
+                  <span className="mobile-menu__destination">
+                    <span className="mobile-menu__destination-meta mono" aria-hidden="true">
+                      <span className="mobile-menu__index">0{i + 1}</span>
+                      <span className="mobile-menu__destination-detail">{DETAILS[item.id]}</span>
+                    </span>
+                    <span className="mobile-menu__label">{item.label}</span>
                   </span>
-                  <span className="mobile-menu__label">{item.label}</span>
                   <span className="mobile-menu__arrow" aria-hidden="true">
                     →
                   </span>

@@ -1,5 +1,5 @@
 /* =========================================================
-   HERO
+   HERO — one ink stage, with separate copy and chrome areas.
    ========================================================= */
 .hero {
   position: relative;
@@ -8,155 +8,74 @@
   isolation: isolate;
 }
 
-.hero__paper {
-  position: absolute;
-  z-index: -1;
-  left: 0;
-  top: 0;
-  width: calc(var(--line-right) + clamp(22px, 2.4vw, 46px));
-  height: calc(var(--line-bottom) + clamp(8px, 1.2vw, 22px));
-  background: var(--paper);
-  transform-origin: left top;
-  animation: paper-in 1.1s var(--ease-out) both;
-}
-
-/* The board's soft paper light bleeding into the stage behind "living". */
-.hero__paper::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 100%;
-  width: 78%;
-  height: 90%;
-  background: radial-gradient(70% 70% at 0% 0%, rgba(244, 247, 251, 0.2), rgba(244, 247, 251, 0.05) 45%, transparent 75%);
-  pointer-events: none;
-}
-
-@keyframes paper-in {
-  from {
-    clip-path: inset(0 100% 0 0);
-  }
-  to {
-    clip-path: inset(0 0 0 0);
-  }
-}
-
 .hero__grid {
-  --line-top: 30vh;
-  --line-bottom: 44vh;
-  --line-right: 44vw;
   position: relative;
   z-index: 2;
   min-height: 100vh;
   min-height: 100svh;
   display: flex;
-  flex-direction: column;
+  align-items: flex-start;
   justify-content: center;
-  padding: calc(var(--header-h) + clamp(16px, 4vh, 48px)) var(--gutter) clamp(72px, 12vh, 132px);
-  /* The hero eases back as the story takes over. */
+  flex-direction: column;
+  padding: calc(var(--header-h) + 48px) var(--gutter) 112px;
   transform: translateY(calc(var(--hero) * -6vh));
   opacity: calc(1 - var(--hero) * 1.2);
 }
 
+.hero__copy {
+  position: relative;
+  isolation: isolate;
+  width: min(46%, 660px);
+  min-width: 0;
+}
+
 .hero__label {
   display: flex;
-  flex-direction: column;
-  color: var(--ink);
-  margin-bottom: clamp(18px, 3vh, 34px);
-  animation: rise-in 0.9s var(--ease-out) 0.35s both;
+  align-items: center;
+  gap: 14px;
+  max-width: 44ch;
+  color: var(--silver);
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  margin-bottom: 24px;
+  animation: rise-in 0.8s var(--ease-out) 0.1s both;
+}
+
+.hero__label::before {
+  content: '';
+  flex: none;
+  width: 24px;
+  height: 1px;
+  background: var(--cobalt);
 }
 
 .hero__title {
-  font-size: clamp(3.4rem, 7.2vw, 9.6rem);
-  font-weight: 740;
-  line-height: 0.88;
-  letter-spacing: -0.062em;
-  margin-left: -0.04em;
-}
-
-.hero__line {
-  display: block;
-  width: fit-content;
-  overflow: hidden;
-  padding: 0.04em 0.06em 0.1em 0.02em;
-  margin: -0.04em -0.06em -0.1em -0.02em;
-}
-
-.hero__line-inner {
-  display: block;
-  animation: line-in 1.15s var(--ease-out) both;
-}
-
-.hero__line--lead {
-  color: var(--ink);
-}
-
-.hero__line--lead .hero__line-inner {
-  animation-delay: 0.15s;
-}
-
-.hero__line--tail .hero__line-inner {
-  animation-delay: 0.28s;
-}
-
-.hero__accent {
-  color: var(--cobalt);
-  background: linear-gradient(100deg, #2f63ff 10%, #4f86ff 45%, #8acbff 62%, #326cff 80%);
-  background-size: 220% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: accent-sheen 7s var(--ease-in-out) 1.4s infinite;
-}
-
-.hero__stop {
-  color: var(--cobalt);
-}
-
-@keyframes accent-sheen {
-  0%,
-  55% {
-    background-position: 100% 0;
-  }
-  100% {
-    background-position: -120% 0;
-  }
-}
-
-@keyframes line-in {
-  from {
-    transform: translateY(108%) rotate(2.5deg);
-  }
-  to {
-    transform: none;
-  }
+  font-size: clamp(3.25rem, 6.6vw, 7.25rem);
+  font-weight: 680;
+  line-height: 1.01;
+  letter-spacing: -0.055em;
+  color: var(--paper);
+  animation: rise-in 0.85s var(--ease-out) 0.18s both;
 }
 
 @keyframes rise-in {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
 }
 
 .hero__footer {
   display: flex;
   flex-direction: column;
-  gap: 26px;
-  margin-top: clamp(26px, 4.4vh, 52px);
-  max-width: 560px;
-  animation: rise-in 1s var(--ease-out) 0.55s both;
+  gap: 24px;
+  margin-top: 28px;
+  animation: rise-in 0.85s var(--ease-out) 0.28s both;
 }
 
 .hero__body {
-  font-size: clamp(1rem, 1.15vw, 1.15rem);
-  line-height: 1.55;
-  color: color-mix(in srgb, var(--paper) 86%, transparent);
-  max-width: 42ch;
+  font-size: clamp(1rem, 1.15vw, 1.125rem);
+  line-height: 1.6;
+  color: color-mix(in srgb, var(--paper) 78%, transparent);
+  max-width: 36ch;
 }
 
 .hero__actions {
@@ -167,78 +86,45 @@
 
 .hero__aside {
   position: absolute;
-  display: flex;
-  flex-direction: column;
-  color: var(--muted-on-ink);
-  animation: rise-in 1s var(--ease-out) 0.8s both;
-}
-
-.hero__aside--top {
   right: var(--gutter);
-  top: calc(var(--header-h) + 36px);
-  color: color-mix(in srgb, var(--paper) 78%, transparent);
+  bottom: 116px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  color: var(--muted-on-ink);
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  animation: rise-in 0.85s var(--ease-out) 0.4s both;
 }
 
-.hero__aside--top::after,
-.hero__aside--bottom::before {
+.hero__aside::before {
   content: '';
-  width: 22px;
+  width: 32px;
   height: 1px;
   background: var(--line-on-ink-strong);
-  margin-top: 12px;
-}
-
-.hero__aside--bottom {
-  right: var(--gutter);
-  bottom: clamp(72px, 12vh, 132px);
-}
-
-.hero__aside--bottom::before {
-  margin: 0 0 12px;
-}
-
-.hero__belief {
-  position: absolute;
-  left: var(--gutter);
-  bottom: clamp(24px, 4vh, 40px);
-  max-width: 30ch;
-  color: var(--muted-on-ink);
-  animation: rise-in 1s var(--ease-out) 0.9s both;
-}
-
-.hero__rule {
-  position: absolute;
-  right: calc(var(--gutter) + 150px);
-  top: 30%;
-  bottom: 30%;
-  width: 1px;
-  background: linear-gradient(180deg, transparent, var(--line-on-ink-strong), transparent);
 }
 
 .hero__cue {
   position: absolute;
   z-index: 3;
-  left: 50%;
-  bottom: clamp(18px, 3vh, 32px);
+  left: var(--gutter);
+  bottom: 24px;
   display: inline-flex;
   align-items: center;
   gap: 12px;
   min-height: 44px;
-  padding: 0 8px;
-  transform: translateX(-50%);
+  padding: 0 4px;
   color: var(--muted-on-ink);
   opacity: calc(1 - var(--hero) * 3);
   transition: color 0.3s;
 }
 
-.hero__cue:hover {
-  color: var(--paper);
-}
+.hero__cue:hover { color: var(--paper); }
 
 .hero__cue-line {
   position: relative;
   width: 1px;
-  height: 28px;
+  height: 24px;
   overflow: hidden;
   background: var(--line-on-ink);
 }
@@ -252,86 +138,83 @@
 }
 
 @keyframes cue-drop {
-  0% {
-    transform: translateY(-100%);
-  }
-  60%,
-  100% {
-    transform: translateY(100%);
-  }
+  0% { transform: translateY(-100%); }
+  60%, 100% { transform: translateY(100%); }
 }
 
-/* Tablet */
-@media (max-width: 1023px) {
-  .hero__paper {
-    top: calc(var(--line-top) - clamp(8px, 1.4vw, 16px));
-    height: calc(var(--line-bottom) - var(--line-top) + clamp(14px, 2.4vw, 28px));
-  }
+/* Wide screens use the board's poster scale: a full product statement below
+   the shorter lead, with the chrome fold suspended in the upper right. */
+@media (min-width: 1100px) and (min-aspect-ratio: 3/2) {
+  .hero__copy { width: min(72%, 1160px); }
+  .hero__title { font-size: clamp(4.5rem, 9vw, 10rem); line-height: 1.04; }
+  .hero__label { margin-bottom: 28px; }
+  .hero__footer { margin-top: 36px; }
+  .hero__body { max-width: 36ch; }
+  .hero__aside { bottom: 144px; }
+}
 
-  .hero__label {
-    color: var(--muted-on-ink);
-  }
-
+/* Tall phones/tablets put the S above the copy, using the shared scene pose. */
+@media (max-width: 959px) and (max-aspect-ratio: 23/20) {
   .hero__grid {
-    justify-content: flex-end;
+    justify-content: flex-start;
+    padding-top: max(calc(var(--header-h) + 220px), 44svh, 44lvh);
+    padding-bottom: calc(64px + env(safe-area-inset-bottom));
+    opacity: calc(1 - var(--hero) * 1.8);
   }
-
-  .hero__rule {
-    display: none;
+  .hero__copy { width: 100%; max-width: 680px; }
+  /* The copy passes the sticky chrome during a native scroll. A soft ink
+     scrim keeps it readable without introducing a hard panel edge. */
+  .hero__copy::before {
+    content: '';
+    position: absolute;
+    inset: -32px -20px;
+    z-index: -1;
+    pointer-events: none;
+    background: linear-gradient(180deg, transparent, rgba(7, 9, 13, 0.86) 48px, rgba(7, 9, 13, 0.86) calc(100% - 48px), transparent);
   }
-
-  .hero__aside--bottom {
-    display: none;
-  }
+  .hero__title { font-size: clamp(3.5rem, 8.4vw, 5.5rem); }
+  .hero__aside, .hero__cue { display: none; }
 }
 
-/* Phones */
-@media (max-width: 719px) {
+@media (max-width: 719px) and (max-aspect-ratio: 23/20) {
   .hero__grid {
-    padding-bottom: calc(76px + env(safe-area-inset-bottom));
+    padding-top: max(calc(var(--header-h) + 220px), 44svh, 44lvh);
+    padding-bottom: calc(48px + env(safe-area-inset-bottom));
   }
-
-  .hero__title {
-    font-size: clamp(3rem, 16.4vw, 4.6rem);
-    letter-spacing: -0.058em;
-  }
-
-  .hero__label {
-    display: none;
-  }
-
-  .hero__footer {
-    gap: 20px;
-    margin-top: 20px;
-  }
-
-  .hero__body {
-    font-size: 1rem;
-  }
-
-  .hero__actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-
-  .hero__actions .cta {
-    padding: 0 14px;
-    gap: 8px;
-    font-size: 0.9rem;
-  }
-
-  .hero__aside--top,
-  .hero__belief,
-  .hero__cue {
-    display: none;
-  }
+  .hero__label { display: none; }
+  .hero__title { font-size: clamp(2.625rem, 13.6vw, 3.75rem); }
+  .hero__footer { gap: 20px; margin-top: 24px; }
+  .hero__body { font-size: 1rem; line-height: 1.55; }
+  .hero__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .hero__actions .cta { padding: 0 12px; gap: 8px; font-size: 0.85rem; }
 }
 
-@media (max-width: 359px) {
-  .hero__actions {
-    grid-template-columns: 1fr;
-  }
+/* Short landscape keeps complete copy beside the art and allows native scroll. */
+@media (max-height: 600px) and (min-aspect-ratio: 23/20) {
+  .hero__grid { padding-top: calc(var(--header-h) + 20px); padding-bottom: 32px; }
+  .hero__copy { width: 48%; }
+  .hero__title { font-size: clamp(2rem, 5.8vw, 4.5rem); }
+  .hero__label, .hero__aside, .hero__cue { display: none; }
+  .hero__footer { gap: 14px; margin-top: 16px; }
+  .hero__body { font-size: 0.875rem; line-height: 1.5; }
+  .hero__actions { gap: 8px; }
+  .hero__actions .cta { min-height: 44px; padding: 0 10px; gap: 6px; font-size: 0.75rem; }
+}
+
+@media (max-width: 359px) and (max-aspect-ratio: 23/20) {
+  .hero__actions { grid-template-columns: 1fr; }
+}
+
+/* A stored pause must never freeze newly mounted copy in an invisible entrance. */
+html[data-paused='true'] .hero__label,
+html[data-paused='true'] .hero__title,
+html[data-paused='true'] .hero__footer,
+html[data-paused='true'] .hero__aside,
+html[data-motion='reduced'] .hero__label,
+html[data-motion='reduced'] .hero__title,
+html[data-motion='reduced'] .hero__footer,
+html[data-motion='reduced'] .hero__aside {
+  animation: none;
 }
 
 /* =========================================================
@@ -340,6 +223,9 @@
 .seq {
   position: relative;
   height: 400vh;
+  /* Three viewports of travel give each of the four chapters room to read.
+     Stable units keep the timeline steady as mobile browser bars collapse. */
+  height: 400svh;
 }
 
 .seq__pin {
@@ -539,10 +425,6 @@
 }
 
 @media (max-width: 899px) {
-  .seq {
-    height: 300vh;
-  }
-
   .seq__pin::before {
     background: linear-gradient(0deg, rgba(7, 9, 13, 0.92) 0%, rgba(7, 9, 13, 0.72) 34%, rgba(7, 9, 13, 0) 52%);
   }

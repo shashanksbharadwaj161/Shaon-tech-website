@@ -1,4 +1,5 @@
 import { site } from '../content/site';
+import { MotionText } from '../ui/MotionText';
 import { OfferingGraphic } from './services/OfferingGraphic';
 
 export function Services() {
@@ -11,7 +12,7 @@ export function Services() {
           {services.eyebrow}
         </p>
         <h2 id="services-title" className="section__title">
-          {services.title}
+          <MotionText effect="fold">{services.title}</MotionText>
         </h2>
         <p className="section__intro">{services.intro}</p>
       </header>
@@ -31,7 +32,7 @@ export function Services() {
             </div>
             <p className="offering__index mono">{o.index}</p>
             <h3 id={`offering-${o.id}`} className="offering__title">
-              {o.title}
+              <MotionText effect="fold">{o.title}</MotionText>
             </h3>
             <p className="offering__lead">{o.lead}</p>
             <p className="offering__body">{o.body}</p>

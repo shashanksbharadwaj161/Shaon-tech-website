@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import { FoldedMark } from '../brand/FoldedMark';
 import { live, subscribeLive } from '../lib/liveState';
 import { easeInOutCubic } from '../lib/math';
@@ -22,7 +22,7 @@ export function FallbackStage({ mode, hidden }: FallbackStageProps) {
   const ref = useRef<HTMLDivElement>(null);
   const { animate } = useMotion();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
     let raf = 0;
@@ -34,8 +34,8 @@ export function FallbackStage({ mode, hidden }: FallbackStageProps) {
       const f = live.frame;
       const pose =
         mode === 'static'
-          ? heroPose(w, h)
-          : mixPose(heroPose(w, h), storyPose(w, h, live.preview), easeInOutCubic(f.hero));
+          ? heroPose(w, h, window.innerWidth, window.innerHeight)
+          : mixPose(heroPose(w, h, window.innerWidth, window.innerHeight), storyPose(w, h, live.preview), easeInOutCubic(f.hero));
       el.style.setProperty('--sx', pose.x.toFixed(4));
       el.style.setProperty('--sy', pose.y.toFixed(4));
       el.style.setProperty('--sh', pose.h.toFixed(4));
@@ -53,7 +53,9 @@ export function FallbackStage({ mode, hidden }: FallbackStageProps) {
     });
     ro.observe(el);
     const unsubscribe = subscribeLive(schedule);
-    schedule();
+    // Establish the responsive pose before the first paint. Subsequent scroll
+    // and pointer updates stay batched into animation frames.
+    update();
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();

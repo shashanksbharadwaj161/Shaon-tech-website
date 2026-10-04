@@ -309,13 +309,6 @@ html[data-paused='true'] *::after {
   transition: color 0.4s var(--ease-out);
 }
 
-/* Only the home hero has the paper panel behind the logo. */
-@media (min-width: 1024px) {
-  html[data-route='home']:not(.is-menu-open) .site-header[data-elevated='false'] .site-header__brand {
-    color: var(--ink);
-  }
-}
-
 .logo {
   display: inline-flex;
   align-items: center;

@@ -113,14 +113,14 @@ export function Experience({ animate, interactive, quality, onFirstFrame }: Expe
 
     // --- Object: hero pose → story pose, folded → unfolded ---------------
     const storyScreen = storyPose(width, height, live.preview);
-    const pose = toWorld(mixPose(heroPose(width, height), storyScreen, easeInOutCubic(f.hero)));
+    const pose = toWorld(mixPose(heroPose(width, height, window.innerWidth, window.innerHeight), storyScreen, easeInOutCubic(f.hero)));
     const bob = Math.sin(t * 0.6) * 0.03 * pose.h * idle;
     // While unfolded the beams are long: shrink a little and lean away from the copy column.
     g.position.set(pose.x + ue * (1 - r) * pose.h * 0.12, pose.y + bob, 0);
     g.scale.setScalar(pose.h * lerp(1, 0.62, ue));
     g.rotation.set(
       (0.07 * Math.sin(t * 0.27) - s.py * 0.18) * idle,
-      (-0.42 + 0.2 * Math.sin(t * 0.31) + s.px * 0.32 + sv * 0.16) * (1 - 0.9 * ue) + 0.12 * Math.sin(Math.PI * u),
+      (-0.42 + 0.27 * Math.sin(t * 0.31) + s.px * 0.32 + sv * 0.16) * (1 - 0.9 * ue) + 0.12 * Math.sin(Math.PI * u),
       (-0.035 + 0.025 * Math.sin(t * 0.21)) * idle,
     );
     g.updateMatrixWorld();
@@ -132,6 +132,8 @@ export function Experience({ animate, interactive, quality, onFirstFrame }: Expe
     cu.uDissolve.value = r * 1.14;
     cu.uRim.value = 0.45 + 0.45 * u + 0.9 * r + energy * 0.75 * (1 - r);
     cu.uEdgeGlow.value = 0.28 + 0.75 * u;
+    cu.uLightPhase.value = t * 0.13 + f.hero * 0.3 + s.px * 0.12;
+    cu.uLightEnergy.value = (0.8 + energy * 0.75) * (1 - r);
     scene.environmentRotation.set(s.py * 0.18, 0.3 * Math.sin(t * 0.11) + s.px * 0.55 + f.q * 1.5 + f.hero * 0.6, 0);
 
     // --- Particles --------------------------------------------------------

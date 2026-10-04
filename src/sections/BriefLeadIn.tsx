@@ -1,6 +1,7 @@
 import { site } from '../content/site';
 import { BriefPlanes } from '../ui/BriefPlanes';
 import { CtaLink } from '../ui/CtaLink';
+import { MotionText } from '../ui/MotionText';
 
 /** Home chapter leading into the full /start-project brief. */
 export function BriefLeadIn() {
@@ -13,7 +14,7 @@ export function BriefLeadIn() {
           {brief.eyebrow}
         </p>
         <h2 id="start-title" className="brief-lead__title">
-          {brief.title}
+          <MotionText effect="shine">{brief.title}</MotionText>
         </h2>
         <p className="section__intro">{brief.body}</p>
         <ol className="brief-steps">

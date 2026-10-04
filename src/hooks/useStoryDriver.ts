@@ -1,4 +1,4 @@
-import { useEffect, type RefObject } from 'react';
+import { useLayoutEffect, type RefObject } from 'react';
 import { live, notifyLive, setPreviewRect } from '../lib/liveState';
 import { approach, chapterState, progressFromScroll, storyFrame, type StoryFrame, type StoryMetrics } from '../lib/storyTimeline';
 
@@ -26,10 +26,22 @@ const VARS: [string, (f: StoryFrame) => number][] = [
  * (read by the HTML narrative). No React state is touched per frame.
  */
 export function useStoryDriver(refs: DriverRefs, enabled: boolean, smooth: boolean): void {
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = refs.root.current;
     if (!enabled || !root) {
-      live.frame = storyFrame(0, 0);
+      const frame = storyFrame(0, 0);
+      live.frame = frame;
+      // React keeps the story root when reduced motion swaps in the still
+      // layout. Clear the previous scroll-driven CSS as well as the scene
+      // channel, so the newly mounted hero is not faded or dissolved away.
+      if (root) {
+        for (const [name, get] of VARS) root.style.setProperty(name, get(frame).toFixed(4));
+        root.dataset.chapter = String(frame.activeChapter);
+        root.querySelectorAll<HTMLElement>('[data-chapter-i]').forEach((el) => {
+          el.dataset.state = chapterState(Number(el.dataset.chapterI), frame.activeChapter);
+        });
+      }
+      notifyLive();
       return;
     }
     let metrics: StoryMetrics = { heroStart: 0, heroLength: 1, sequenceStart: 1, sequenceLength: 1 };

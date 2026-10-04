@@ -1,0 +1,181 @@
+/* Folded Signal type: bevelled faces, a shared diagonal light, and glyphs
+   unfolding in reading order. These material layers stay inside the type. */
+.hero__title.hk-headline {
+  --hk-px: 0;
+  --hk-py: 0;
+  --hk-energy: 0;
+  position: relative;
+  perspective: 1100px;
+  perspective-origin: 30% 50%;
+  font-weight: 760;
+  animation: none;
+}
+
+.hk-line {
+  display: block;
+  transform-style: preserve-3d;
+}
+
+.hk-line--product {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.2em;
+}
+
+.hk-word {
+  display: inline-block;
+  position: relative;
+  white-space: nowrap;
+  transform-style: preserve-3d;
+  transform-origin: 0% 60%;
+  transform: rotateY(calc(var(--hk-px) * 3deg - var(--hero, 0) * 5deg))
+    rotateX(calc(var(--hk-py) * -2deg))
+    skewX(calc(var(--hero, 0) * -2deg))
+    translateZ(calc(var(--hk-energy) * 0.07em));
+  transition: transform 0.36s var(--ease-out);
+}
+
+.hk-space { display: inline-block; width: 0.22em; }
+
+.hk-letter {
+  display: inline-block;
+  position: relative;
+  transform-origin: 50% 82%;
+  transform-style: preserve-3d;
+  animation: hk-unfold 1s var(--ease-out) both;
+  animation-delay: calc(0.12s + var(--glyph) * 0.025s);
+}
+
+.hk-letter__face {
+  position: relative;
+  display: block;
+  color: var(--paper);
+  text-shadow:
+    0 0.008em 0 rgba(244, 247, 251, 0.75),
+    0 0 calc(var(--hk-energy) * 0.16em) rgba(138, 203, 255, 0.7);
+}
+
+/* A shallow extruded edge, angled like the two folded ribbons. */
+.hk-letter::before {
+  content: attr(data-glyph);
+  position: absolute;
+  inset: 0;
+  color: #70819d;
+  transform: translate3d(0.019em, 0.047em, -1px);
+  text-shadow:
+    0.008em 0.006em 0 #526581,
+    0.016em 0.014em 0 #35465f,
+    0.023em 0.022em 0 #172338;
+  pointer-events: none;
+}
+
+.hk-word--cobalt .hk-letter__face,
+.hk-letter--stop .hk-letter__face {
+  color: var(--cobalt);
+  text-shadow:
+    0 0.008em 0 var(--ice),
+    0 0 calc(var(--hk-energy) * 0.2em) rgba(50, 108, 255, 0.85);
+}
+
+.hk-word--cobalt .hk-letter::before,
+.hk-letter--stop::before {
+  color: #1f4fd8;
+  text-shadow:
+    0.008em 0.006em 0 #183d9e,
+    0.016em 0.014em 0 #122a66,
+    0.023em 0.022em 0 #0b193e;
+}
+
+/* The beam follows the board's 21.6° fold. Bright faces retain a silver floor
+   rather than dissolving through dark bands, so every word remains readable. */
+@supports ((background-clip: text) or (-webkit-background-clip: text)) {
+  .hk-letter__face {
+    background: linear-gradient(111.6deg,
+      #f4f7fb 0%, #becbde 20%, #f4f7fb 34%, #aab5c7 50%,
+      #d7e1ed 57%, #f4f7fb 70%, #c5d2e4 86%, #f4f7fb 100%);
+    background-size: 220% 100%;
+    background-position: calc(50% + var(--hk-px) * 28%) calc(50% + var(--hk-py) * 18%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    -webkit-text-stroke: 0.004em rgba(244, 247, 251, 0.5);
+  }
+
+  .hk-word--cobalt .hk-letter__face,
+  .hk-letter--stop .hk-letter__face {
+    background-image: linear-gradient(111.6deg,
+      #326cff 0%, #568eff 28%, #8acbff 40%, #326cff 54%,
+      #326cff 72%, #8acbff 86%, #326cff 100%);
+    -webkit-text-stroke-color: rgba(138, 203, 255, 0.55);
+  }
+
+  .hk-letter::after {
+    content: attr(data-glyph);
+    position: absolute;
+    inset: 0;
+    color: transparent;
+    background: linear-gradient(111.6deg,
+      transparent 39%, rgba(138, 203, 255, 0.28) 46%,
+      rgba(244, 247, 251, 0.95) 50%, rgba(138, 203, 255, 0.3) 54%, transparent 61%);
+    background-size: 380% 100%;
+    background-position: 160% 0;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    pointer-events: none;
+    opacity: calc(0.6 + var(--hk-energy) * 0.4);
+    animation: hk-reflection 6.4s var(--ease-in-out) infinite;
+    animation-delay: calc(1.05s + var(--glyph) * 0.035s);
+  }
+}
+
+@keyframes hk-unfold {
+  from { opacity: 0.12; transform: translate3d(-0.03em, 0.58em, -48px) rotateX(-72deg) rotateY(-21.6deg); }
+  55% { opacity: 1; }
+  to { opacity: 1; transform: none; }
+}
+
+/* A single pass, then a long hold: the headline is not continuously flashing.
+   Only these small glyph layers repaint; there are no filters or video. */
+@keyframes hk-reflection {
+  0% { background-position: 160% 0; }
+  44%, 100% { background-position: -160% 0; }
+}
+
+/* Off-screen and hidden tabs stop the material pass; entrances retain their
+   final readable state. Paused/reduced modes also remove pointer deformation. */
+.hk-headline[data-active='false'] .hk-letter,
+.hk-headline[data-kinetic='false'] .hk-letter,
+html[data-paused='true'] .hk-headline .hk-letter,
+html[data-motion='reduced'] .hk-headline .hk-letter {
+  animation: none;
+  opacity: 1;
+  transform: none;
+}
+
+.hk-headline[data-active='false'] .hk-letter::after,
+.hk-headline[data-kinetic='false'] .hk-letter::after,
+html[data-paused='true'] .hk-headline .hk-letter::after,
+html[data-motion='reduced'] .hk-headline .hk-letter::after {
+  animation: none;
+  opacity: 0;
+}
+
+.hk-headline[data-kinetic='false'] .hk-word,
+html[data-paused='true'] .hk-headline .hk-word,
+html[data-motion='reduced'] .hk-headline .hk-word {
+  transform: none;
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-motion='full']) .hk-headline .hk-letter,
+  html:not([data-motion='full']) .hk-headline .hk-letter::after,
+  html:not([data-motion='full']) .hk-headline .hk-word {
+    animation: none;
+    transform: none;
+    transition: none;
+  }
+  html:not([data-motion='full']) .hk-headline .hk-letter::after { opacity: 0; }
+}

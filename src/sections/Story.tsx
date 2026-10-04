@@ -5,6 +5,7 @@ import { useStoryDriver } from '../hooks/useStoryDriver';
 import { useMotion } from '../motion/MotionProvider';
 import { SignalLanes } from '../stage/SignalLanes';
 import { Stage } from '../stage/Stage';
+import { MotionText } from '../ui/MotionText';
 import { Hero } from './Hero';
 import { InterfacePreview } from './InterfacePreview';
 import { Wireframe } from './Wireframe';
@@ -59,7 +60,7 @@ export function Story() {
                       {c.kicker}
                     </p>
                     <h3 id={`chapter-${c.id}`} className="seq__heading">
-                      {c.title}
+                      <MotionText effect="fold" trigger="chapter">{c.title}</MotionText>
                     </h3>
                     <p className="seq__body">{c.body}</p>
                   </article>

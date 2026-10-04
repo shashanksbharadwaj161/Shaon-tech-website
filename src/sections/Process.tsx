@@ -4,6 +4,7 @@ import { site } from '../content/site';
 import { useScrollProgress } from '../hooks/useScrollProgress';
 import { processDrivers, type ProcessDrivers } from '../lib/processTimeline';
 import { useMotion } from '../motion/MotionProvider';
+import { MotionText } from '../ui/MotionText';
 
 const W = 800;
 const H = 480;
@@ -153,7 +154,9 @@ export function Process() {
     el.style.setProperty('--design', d.design.toFixed(4));
     el.style.setProperty('--develop', d.develop.toFixed(4));
     el.style.setProperty('--launch', d.launch.toFixed(4));
-    if (d.stage !== lastStage.current) {
+    // The pinned element is recreated after leaving reduced motion. Its
+    // initial DOM state may differ even if the previous stage is unchanged.
+    if (d.stage !== lastStage.current || el.dataset.stage !== String(d.stage)) {
       lastStage.current = d.stage;
       el.dataset.stage = String(d.stage);
       el.querySelectorAll<HTMLElement>('[data-stage-i]').forEach((s) => {
@@ -169,7 +172,12 @@ export function Process() {
     }
   }, []);
 
-  useScrollProgress(section, apply, { kind: 'pinned' }, false);
+  // Changing motion preference removes/recreates the pinned element; rebind
+  // the hook so it does not retain a scroll listener for the removed section.
+  useScrollProgress(section, apply, { kind: 'pinned' }, reduced, {
+    smoothing: { lambda: 12, snap: 0.3 },
+    pin,
+  });
 
   if (reduced) {
     const states: ProcessDrivers[] = [
@@ -186,7 +194,7 @@ export function Process() {
             {process.eyebrow}
           </p>
           <h2 id="process-title" className="section__title">
-            {process.title}
+            <MotionText effect="fold">{process.title}</MotionText>
           </h2>
         </header>
         <ol className="process-still">
@@ -213,7 +221,7 @@ export function Process() {
             {process.eyebrow}
           </p>
           <h2 id="process-title" className="process__title">
-            {process.title}
+            <MotionText effect="fold">{process.title}</MotionText>
           </h2>
         </header>
 
@@ -237,7 +245,7 @@ export function Process() {
                   {s.index} <span aria-hidden="true">/ 04</span>
                 </p>
                 <h3 id={`process-${s.id}`} className="process__name">
-                  {s.title}
+                  <MotionText effect="fold" trigger="chapter">{s.title}</MotionText>
                 </h3>
                 <p className="process__body">{s.body}</p>
                 <p className="process__detail mono">{s.detail}</p>

@@ -84,6 +84,9 @@ export interface ChromeUniforms {
   uEdgeGlow: IUniform<number>;
   uEdgeColor: IUniform<Color>;
   uBurnColor: IUniform<Color>;
+  /** A studio light travels along the developed ribbon, following its fold. */
+  uLightPhase: IUniform<number>;
+  uLightEnergy: IUniform<number>;
 }
 
 export function ribbonUniforms(spec: RibbonSpec) {
@@ -109,6 +112,8 @@ export function createChromeMaterial(spec: RibbonSpec): { material: MeshPhysical
     uEdgeGlow: { value: 0.35 },
     uEdgeColor: { value: new Color('#5E8DFF') },
     uBurnColor: { value: new Color('#8ACBFF') },
+    uLightPhase: { value: 0 },
+    uLightEnergy: { value: 0 },
   };
 
   const material = new MeshPhysicalMaterial({
@@ -162,6 +167,8 @@ uniform vec3 uRimColor;
 uniform float uEdgeGlow;
 uniform vec3 uEdgeColor;
 uniform vec3 uBurnColor;
+uniform float uLightPhase;
+uniform float uLightEnergy;
 ${RIBBON_PARS}`,
       )
       .replace(
@@ -177,10 +184,18 @@ float rbBurn = uDissolve > 0.0 ? 1.0 - smoothstep(0.0, 0.085, rbField - uDissolv
 float rbFres = pow(1.0 - clamp(abs(dot(normal, normalize(vViewPosition))), 0.0, 1.0), 2.4);
 totalEmissiveRadiance += uRimColor * rbFres * uRim;
 totalEmissiveRadiance += uEdgeColor * vEdge * uEdgeGlow * (0.35 + 0.65 * rbFres);
+// Light runs along the actual ribbon coordinates, so it follows the crease
+// through the native-scroll unfold rather than drifting over the silhouette.
+float rbTravel = fract(vDev.x / uRibLen - uLightPhase);
+float rbDistance = min(rbTravel, 1.0 - rbTravel);
+float rbLight = 1.0 - smoothstep(0.008, 0.06, rbDistance);
+float rbLightHalo = 1.0 - smoothstep(0.03, 0.19, rbDistance);
+totalEmissiveRadiance += uRimColor * rbLightHalo * uLightEnergy * (0.12 + 0.25 * rbFres);
+totalEmissiveRadiance += uBurnColor * rbLight * uLightEnergy * (0.06 + 0.7 * vEdge + 0.3 * rbFres);
 totalEmissiveRadiance += uBurnColor * rbBurn * 3.2;`,
       );
   };
-  material.customProgramCacheKey = () => 'shaon-chrome-ribbon-1';
+  material.customProgramCacheKey = () => 'shaon-chrome-ribbon-2';
 
   return { material, uniforms };
 }

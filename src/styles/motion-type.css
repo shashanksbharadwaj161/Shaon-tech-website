@@ -1,0 +1,174 @@
+/* Kinetic type follows the Folded Signal construction, using the existing
+   band angle, ink/paper and cobalt. Word boxes reserve their final layout. */
+.motion-type {
+  --type-angle: 21.6deg;
+  display: inline;
+}
+
+.motion-type__word {
+  position: relative;
+  display: inline-block;
+  vertical-align: baseline;
+  white-space: nowrap;
+}
+
+.motion-type__ink {
+  display: inline-block;
+  transform-origin: 50% 100%;
+}
+
+.motion-type__trace {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  user-select: none;
+  opacity: 0;
+  color: var(--cobalt);
+}
+
+/* Services: folded planes open around a crease, then become useful type. */
+.motion-type--fold[data-running='true'][data-trigger='view'][data-inview='true'] .motion-type__ink,
+.seq__chapter[data-state='active'] .motion-type--fold[data-running='true'][data-trigger='chapter'][data-inview='true'] .motion-type__ink,
+.swap[data-state='active'] .motion-type--fold[data-running='true'][data-trigger='chapter'][data-inview='true'] .motion-type__ink {
+  animation: type-unfold 0.95s var(--ease-out) both;
+  animation-delay: calc(min(var(--type-i), 7) * 55ms);
+}
+
+@keyframes type-unfold {
+  0% {
+    transform: perspective(700px) translate3d(0, 0.72em, 0) rotateX(-82deg) skewY(calc(var(--type-angle) * -1));
+    opacity: 0.18;
+  }
+  48% {
+    transform: perspective(700px) translate3d(0, -0.055em, 0) rotateX(13deg) skewY(2deg);
+    opacity: 1;
+  }
+  100% { transform: none; opacity: 1; }
+}
+
+/* Work: alternating components lock into a single, solid proposition. */
+.motion-type--assemble[data-running='true'][data-inview='true'] .motion-type__ink {
+  animation: type-assemble 1.15s var(--ease-out) both;
+  animation-delay: calc(min(var(--type-i), 7) * 75ms);
+}
+
+@keyframes type-assemble {
+  0% {
+    transform: translate3d(calc(var(--type-side) * 0.32em), 0.26em, 0) rotate(calc(var(--type-side) * 8deg)) scaleX(0.72);
+    opacity: 0.2;
+  }
+  62% { transform: translate3d(0, -0.018em, 0) rotate(0) scaleX(1.025); opacity: 1; }
+  100% { transform: none; opacity: 1; }
+}
+
+/* Lab: a cobalt scan follows the mark's oblique light edge. The base stays
+   solid while the trace repeats only for a visible, running lab heading. */
+.motion-type--scan[data-running='true'][data-inview='true'] .motion-type__ink {
+  animation: type-signal 0.85s var(--ease-out) both;
+  animation-delay: calc(var(--type-i) * 65ms);
+}
+
+.motion-type--scan[data-running='true'][data-inview='true'] .motion-type__trace {
+  animation: type-scan 5.2s var(--ease-in-out) infinite;
+  animation-delay: calc(var(--type-i) * 100ms);
+}
+
+@keyframes type-signal {
+  from { transform: translateX(0.14em) scaleX(0.78); opacity: 0.45; }
+  to { transform: none; opacity: 1; }
+}
+
+@keyframes type-scan {
+  0%, 10% {
+    opacity: 0.95;
+    clip-path: polygon(-45% 0, -15% 0, -55% 100%, -85% 100%);
+  }
+  37% {
+    opacity: 0.95;
+    clip-path: polygon(155% 0, 185% 0, 145% 100%, 115% 100%);
+  }
+  38%, 100% { opacity: 0; clip-path: inset(0 0 0 100%); }
+}
+
+/* Studio: construction outlines gain ink as the statement enters view. */
+.motion-type--outline .motion-type__trace {
+  opacity: 0.55;
+  color: inherit;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 1px currentColor;
+}
+
+@supports not (animation-timeline: view()) {
+  .motion-type--outline[data-running='true'][data-inview='true'] .motion-type__ink {
+    animation: type-fill 1.35s var(--ease-out) both;
+    animation-delay: calc(min(var(--type-i), 7) * 65ms);
+  }
+}
+
+@keyframes type-fill {
+  from { clip-path: inset(-12% 100% -18% 0); }
+  to { clip-path: inset(-12% 0 -18% 0); }
+}
+
+@supports (animation-timeline: view()) {
+  .motion-type--outline {
+    display: inline-block;
+    view-timeline-name: --studio-type;
+    view-timeline-axis: block;
+  }
+
+  .motion-type--outline[data-running='true'] .motion-type__ink {
+    animation: type-fill linear both;
+    animation-duration: auto;
+    animation-timeline: --studio-type;
+    animation-range: entry 8% cover 42%;
+  }
+}
+
+/* Brief: a settled question catches light on hover, touch or a nearby CTA's
+   keyboard focus. It never becomes scrambled, unreadable or a fake control. */
+.motion-type--shine[data-running='true'][data-inview='true'] .motion-type__ink {
+  animation: type-settle 0.9s var(--ease-out) both;
+  animation-delay: calc(var(--type-i) * 65ms);
+}
+
+.motion-type--shine[data-running='true'][data-inview='true']:hover .motion-type__trace,
+.motion-type--shine[data-running='true'][data-inview='true'][data-touch='true'] .motion-type__trace,
+.brief-lead__copy:focus-within .motion-type--shine[data-running='true'][data-inview='true'] .motion-type__trace {
+  color: var(--ice);
+  animation: type-scan 1.15s var(--ease-in-out) both;
+  animation-delay: calc(var(--type-i) * 55ms);
+}
+
+@keyframes type-settle {
+  from { transform: perspective(900px) rotateX(18deg) translateY(0.12em); }
+  to { transform: none; }
+}
+
+/* Context is synchronous, so pause/reduction settles text before the root
+   dataset effect runs. These overrides also cover a system preference change. */
+.motion-type[data-running='false'] .motion-type__ink,
+html[data-paused='true'] .motion-type .motion-type__ink,
+html[data-motion='reduced'] .motion-type .motion-type__ink {
+  animation: none !important;
+  transform: none !important;
+  opacity: 1 !important;
+  clip-path: none !important;
+}
+
+.motion-type[data-running='false'] .motion-type__trace,
+html[data-paused='true'] .motion-type .motion-type__trace,
+html[data-motion='reduced'] .motion-type .motion-type__trace {
+  animation: none !important;
+  opacity: 0 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-motion='full']) .motion-type__ink {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+    clip-path: none !important;
+  }
+  html:not([data-motion='full']) .motion-type__trace { animation: none !important; opacity: 0 !important; }
+}

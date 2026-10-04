@@ -848,6 +848,7 @@
 .process {
   position: relative;
   height: 320vh;
+  height: 320svh;
   background: var(--ink);
   border-top: 1px solid var(--line-on-ink);
 }
@@ -1220,7 +1221,7 @@
 }
 
 /* Reduced motion: the still Process flows naturally at every breakpoint.
-   Two classes outrank both pinned-height rules (.process at 320vh / 260vh). */
+   Two classes outrank the cinematic section height. */
 .process.process--still {
   height: auto;
   min-height: 0;
@@ -1240,10 +1241,6 @@
 }
 
 @media (max-width: 899px) {
-  .process {
-    height: 260vh;
-  }
-
   .process__pin {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto 1fr auto auto 1.4fr;

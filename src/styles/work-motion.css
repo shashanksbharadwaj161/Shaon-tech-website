@@ -1,0 +1,132 @@
+/* The fold begins on the 21.6° identity angle, then opens into a complete
+   concept window. The image settles later, revealing depth behind the edge. */
+.work-motion__visual {
+  --visual-t: 0;
+  --window-t: 1;
+  --open: min(var(--window-t), clamp(0, calc(var(--visual-t) * 1.08 - var(--i) * 0.025), 1));
+  --depth: clamp(0, calc((var(--open) - 0.08) * 1.09), 1);
+  isolation: isolate;
+  background:
+    linear-gradient(111.6deg, transparent 29%, rgb(50 108 255 / 14%) 49%, transparent 69%),
+    var(--ink);
+}
+
+.work-motion__mask {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  clip-path: polygon(
+    0 calc((1 - var(--open)) * 68%),
+    100% calc((1 - var(--open)) * 15%),
+    100% calc(100% - (1 - var(--open)) * 75%),
+    0 calc(100% - (1 - var(--open)) * 22%)
+  );
+  transition: clip-path 0.38s var(--ease-out);
+}
+
+.work-motion__image {
+  position: absolute;
+  inset: -10px;
+  transform:
+    translate3d(
+      calc((1 - var(--depth)) * -14px + var(--wx, 0) * 7px),
+      calc((1 - var(--depth)) * 22px + var(--wy, 0) * 6px),
+      0
+    )
+    scale(calc(1 + (1 - var(--depth)) * 0.14));
+  transition: transform 0.58s var(--ease-out);
+}
+
+.work-motion__fold {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: calc((1 - var(--open)) * 0.9);
+  background: linear-gradient(111.6deg,
+    transparent 44.7%,
+    rgb(50 108 255 / 25%) 45%,
+    var(--cobalt) 45.6%,
+    var(--ice) 46%,
+    rgb(244 247 251 / 90%) 46.15%,
+    transparent 46.45%,
+    transparent 52%,
+    rgb(138 203 255 / 60%) 52.3%,
+    transparent 52.6%
+  );
+  transition: opacity 0.38s var(--ease-out);
+}
+
+/* The contact light follows mouse, pen and touch without capturing gestures.
+   It has no autonomous loop; the workspace pulse runs only while visible. */
+.work-panel__link::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(ellipse 72% 56% at var(--wl-x, 50%) var(--wl-y, 50%),
+    rgb(138 203 255 / 19%), rgb(50 108 255 / 7%) 45%, transparent 75%);
+  opacity: var(--contact, 0);
+  transition: opacity 0.22s var(--ease-out);
+}
+
+.work-panel__link:focus-visible .work-motion__visual {
+  --open: 1;
+  --depth: 1;
+}
+
+.work-panel__link:active {
+  transform: scale(0.98) translateZ(12px);
+}
+
+.work-motion__visual .wp-mini__col .hl { animation-play-state: paused; }
+.work-motion__visual[data-visible='true'] .wp-mini__col .hl { animation-play-state: running; }
+
+@media (pointer: coarse) {
+  .work-panel__link:hover { transform: none; }
+  .work-panel__link:active { transform: scale(0.98); }
+}
+
+html[data-motion='reduced'] .work-motion__visual,
+html[data-paused='true'] .work-motion__visual {
+  --open: 1;
+  --depth: 1;
+}
+
+html[data-motion='reduced'] .work-motion__mask,
+html[data-paused='true'] .work-motion__mask {
+  clip-path: none;
+  transition: none;
+}
+
+html[data-motion='reduced'] .work-motion__image,
+html[data-paused='true'] .work-motion__image {
+  transform: none;
+  transition: none;
+}
+
+html[data-motion='reduced'] .work-motion__fold,
+html[data-paused='true'] .work-motion__fold,
+html[data-motion='reduced'] .work-panel__link::before,
+html[data-paused='true'] .work-panel__link::before { opacity: 0; }
+
+html[data-motion='reduced'] .work-stage__deck,
+html[data-paused='true'] .work-stage__deck,
+html[data-motion='reduced'] .work-panel,
+html[data-paused='true'] .work-panel { transform: none; }
+
+html[data-motion='reduced'] .work-panel__link,
+html[data-paused='true'] .work-panel__link { transform: none; }
+
+html[data-motion='reduced'] .work-motion__visual .wp-mini__col .hl,
+html[data-paused='true'] .work-motion__visual .wp-mini__col .hl { animation-play-state: paused; }
+
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-motion='full']) .work-motion__visual { --open: 1; --depth: 1; }
+  html:not([data-motion='full']) .work-motion__mask { clip-path: none; transition: none; }
+  html:not([data-motion='full']) .work-motion__image { transform: none; transition: none; }
+  html:not([data-motion='full']) .work-motion__fold,
+  html:not([data-motion='full']) .work-panel__link::before { opacity: 0; }
+  html:not([data-motion='full']) .work-motion__visual .wp-mini__col .hl { animation-play-state: paused; }
+}

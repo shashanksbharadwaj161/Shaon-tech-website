@@ -14,6 +14,7 @@ import {
   type LabParams,
 } from '../lib/labParams';
 import { useMotion } from '../motion/MotionProvider';
+import { MotionText } from '../ui/MotionText';
 import { SignalLanes } from '../stage/SignalLanes';
 
 const LabCanvas = lazy(() => import('../scene/LabCanvas'));
@@ -189,7 +190,7 @@ export function Lab() {
           {lab.eyebrow}
         </p>
         <h2 id="lab-title" className="section__title">
-          {lab.title}
+          <MotionText effect="scan">{lab.title}</MotionText>
         </h2>
         <p className="section__intro">{lab.body}</p>
       </header>

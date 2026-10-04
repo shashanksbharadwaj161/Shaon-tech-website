@@ -12,12 +12,17 @@ export interface ScreenPose {
   h: number;
 }
 
-export function heroPose(width: number, height: number): ScreenPose {
+export function heroPose(width: number, height: number, layoutWidth = width, layoutHeight = height): ScreenPose {
   const aspect = width / height;
-  if (aspect < 0.75) return { x: 0.6, y: 0.29, h: 0.32 };
-  if (aspect < 1.15) return { x: 0.63, y: 0.36, h: 0.44 };
-  if (aspect < 1.5) return { x: 0.71, y: 0.48, h: 0.55 };
-  return { x: 0.725, y: 0.51, h: 0.62 };
+  // Narrow/tall screens reserve a complete art area above the copy. Wider
+  // screens keep the mark in the right column, clear of the complete words.
+  // CSS media queries use the layout viewport; the stage excludes scrollbars
+  // and uses lvh, so those dimensions can differ at a responsive boundary.
+  if (layoutWidth < 960 && layoutWidth / layoutHeight <= 1.15) return { x: 0.54, y: 0.27, h: 0.29 };
+  // A tall desktop viewport must not grow the S wider than its copy-free column.
+  if (aspect < 1.5) return { x: 0.76, y: 0.46, h: Math.min(0.48, aspect * 0.46) };
+  if (layoutWidth >= 1100 && layoutWidth / layoutHeight >= 1.5) return { x: 0.82, y: 0.34, h: 0.48 };
+  return { x: 0.75, y: 0.48, h: 0.58 };
 }
 
 export function storyPose(width: number, height: number, preview: PreviewRect | null): ScreenPose {

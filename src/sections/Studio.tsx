@@ -1,6 +1,7 @@
 import { FoldedMark, MARK_ASPECT } from '../brand/FoldedMark';
 import { MARK, RIBBON } from '../brand/markGeometry';
 import { site } from '../content/site';
+import { MotionText } from '../ui/MotionText';
 
 const W = MARK_ASPECT * 100;
 const S = MARK.scale * 100;
@@ -49,7 +50,7 @@ export function Studio() {
           {studio.eyebrow}
         </p>
         <h2 id="studio-title" className="section__title">
-          {studio.title}
+          <MotionText effect="outline">{studio.title}</MotionText>
         </h2>
         {studio.paragraphs.map((p) => (
           <p key={p} className="section__intro">

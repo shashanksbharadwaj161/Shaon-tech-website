@@ -76,6 +76,9 @@
 .stage[data-mode='static'] {
   position: absolute;
   inset: 0;
+  bottom: auto;
+  height: 100vh;
+  height: 100lvh;
   z-index: 0;
 }
 
