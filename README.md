@@ -19,7 +19,8 @@ real-time React Three Fiber scene and a complete SVG/CSS fallback.
 Routing uses the History API (real URLs, browser back/forward, per-page
 titles, focus moved to the new page, scroll restored on back). `pnpm dev` and
 `pnpm preview` serve deep links directly; a static host needs an SPA fallback
-that serves `index.html` for unknown paths.
+that serves `index.html` for unknown paths. The included `vercel.json` configures
+that fallback for Vercel; use the Vite preset, `pnpm build`, and output `dist`.
 
 ## Run it
 
@@ -62,7 +63,7 @@ To exercise a **runtime** WebGL failure, open DevTools on a normal load and run:
 Concept renders are referenced from `public/media/` (see `src/content/media.ts`):
 `form-lamp-silver-{640,960,1680}.{avif,webp}` (largest file is 1254×1254) and
 `still-pavilion-blue-{640,960,1680}.{avif,webp}` (largest 1672×941). They are
-**not committed** — the media owner places them in a local preview. Each image is
+**committed as optimized variants** for the published site. Each image is
 an AVIF/WebP `<picture>` with real dimensions, `loading="lazy"`,
 `decoding="async"` and a reserved aspect ratio; if a file is missing, a
 code-native drawing of the same fictional object stays in place, labelled as a
@@ -216,5 +217,5 @@ node --experimental-strip-types scripts/generate-favicon.ts   # Node ≥ 22.6
   and touch emulation at 1440×900, 820×1180, 390×844, 375×667 and short
   landscape (667×375, 844×390, 568×320). Real-device Safari / iOS, real touch
   hardware, screen readers and GPU performance still need checking.
-- The concept renders were not available in the build environment, so their
-  in-page appearance was verified only through the fallback path and markup.
+- Concept renders are fictional studio explorations. Responsive AVIF/WebP
+  variants are included; labelled drawings remain available if media fails.

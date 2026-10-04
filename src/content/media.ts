@@ -1,7 +1,7 @@
 /**
- * Responsive concept imagery supplied by the media owner. Files live in
- * public/media in the local preview only; they are not committed. Every image
- * has a code-native fallback, so a missing file degrades to original geometry.
+ * Responsive concept imagery supplied by the media owner. Optimized AVIF/WebP
+ * variants are committed in public/media. Every image has a code-native
+ * fallback, so an unavailable file degrades to original geometry.
  *
  * Each file name carries its nominal size; `w` is the file's real pixel width
  * (the largest files are smaller than their nominal 1680).
