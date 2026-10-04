@@ -29,14 +29,15 @@ Requires Node ≥ 20.19 and pnpm 10 (`corepack enable` will pick up the pinned v
 pnpm install
 pnpm dev          # http://localhost:5173
 pnpm typecheck    # strict tsc, app + config
-pnpm test         # vitest (geometry, timeline, switches, navigation)
+pnpm test         # vitest: geometry, timeline, switches, navigation, routes, Lab params, demo/brief models and exports
 pnpm build        # typecheck, then production build to dist/
 pnpm preview      # serve dist/ on http://localhost:4173
 ```
 
-Nothing is fetched at runtime: fonts (Geist / Geist Mono, OFL) are bundled from
-npm, the chrome studio lighting is generated procedurally, and there are no
-images, videos or third-party services.
+Nothing is fetched from third parties: fonts (Geist / Geist Mono, OFL) are
+bundled from npm, the chrome studio lighting is generated procedurally, the
+only images are the local concept renders below, and there are no videos,
+analytics or external services.
 
 ## QA switches
 
@@ -75,13 +76,21 @@ intensity 30%, flow speed 1.00× (`src/lib/labParams.ts`). Settings live only
 in memory. Dragging over the Lab (mouse or touch) optionally steers light and
 tilt; `touch-action: pan-y` keeps vertical page scrolling native.
 
+On phones the same Lab viewport (one canvas) becomes a compact sticky preview
+under the glass bar, so every adjustment is visible while tuning; it is bounded
+by the Lab section and releases before Process. Keyboard focus on a control is
+nudged just below the preview. Short landscape phones show preview and controls
+side by side.
+
 ## Mobile
 
 Phone layouts are art-directed at 375 and 390 px rather than scaled: a
 floating liquid-glass nav pill (blur limited to the small bar; denser tint over
 paper sections; solid fallback without `backdrop-filter` or with
 `prefers-reduced-transparency`), a full-screen folded-panel menu built from the
-mark's 21.6° bands (no full-screen blur), swipeable Work panels, and touch on
+mark's 21.6° bands over an opaque ink backing (no full-screen blur; the bar
+with Close stays fixed and only the links scroll if they must; two columns on
+short landscape phones), swipeable Work panels, and touch on
 the hero S: finger position steers light and tilt with inertia, taps pulse the
 cobalt edge light, and native scroll velocity adds a restrained twist. All
 touch listeners are passive — nothing hijacks scrolling.
@@ -193,13 +202,17 @@ node --experimental-strip-types scripts/generate-favicon.ts   # Node ≥ 22.6
 ## Known limits
 
 - The brief cannot be sent: contact delivery is not connected. It can be
-  downloaded as JSON or UTF-8 text.
+  downloaded as JSON or UTF-8 text (or copied from the text preview). The page
+  reports a download as *requested*, because a browser can block a save
+  silently. Answers stay in memory for the visit (moving between pages keeps
+  them); no storage API is used, and a reload or closed tab discards them.
 - Studio concepts use sample data, sample prices and sample inventory; there is
   no checkout, payment, booking or persistence.
 - `@react-three/fiber` 9.8 logs a `THREE.Clock` deprecation warning from inside
   the library; it is harmless.
 - Visual QA was done in headless Chromium with software WebGL (SwiftShader)
-  and touch emulation at 1440×900, 820×1180, 390×844 and 375×667. Real-device
-  Safari / iOS, real touch hardware and GPU performance still need checking.
+  and touch emulation at 1440×900, 820×1180, 390×844, 375×667 and short
+  landscape (667×375, 844×390, 568×320). Real-device Safari / iOS, real touch
+  hardware, screen readers and GPU performance still need checking.
 - The concept renders were not available in the build environment, so their
   in-page appearance was verified only through the fallback path and markup.

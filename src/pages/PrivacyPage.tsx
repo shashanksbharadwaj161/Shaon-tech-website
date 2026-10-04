@@ -12,7 +12,7 @@ const SECTIONS: { title: string; body: string[] }[] = [
     title: 'The project brief',
     body: [
       'Everything you type into the brief stays in this page’s memory. It is not sent anywhere — contact delivery is not connected yet — and it is cleared when you reload or close the page.',
-      'The “Download JSON” and “Download text” buttons create the file inside your browser and save it to your device. No copy is uploaded.',
+      'The “Download JSON” and “Download text” buttons create the file inside your browser and ask it to save the file to your device; your browser decides whether it does. No copy is uploaded.',
     ],
   },
   {
