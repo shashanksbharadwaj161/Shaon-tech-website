@@ -29,6 +29,7 @@ export function MobileMenu({ open, active, onClose }: MobileMenuProps) {
     const footer = document.querySelector<HTMLElement>('.site-footer');
     main?.setAttribute('inert', '');
     footer?.setAttribute('inert', '');
+    panelRef.current?.querySelector('.mobile-menu__scroll')?.scrollTo(0, 0);
     const focusTimer = window.setTimeout(() => closeRef.current?.focus(), 30);
 
     const onKey = (e: KeyboardEvent) => {
@@ -93,33 +94,37 @@ export function MobileMenu({ open, active, onClose }: MobileMenuProps) {
           </span>
         </button>
       </div>
-      <nav aria-label="Site" className="mobile-menu__nav">
-        <ol className="mobile-menu__list">
-          {items.map((item, i) => (
-            <li key={item.id} style={{ ['--i' as string]: i }}>
-              <a
-                href={item.href}
-                className={`mobile-menu__link${item.id === 'start' ? ' mobile-menu__link--cta' : ''}`}
-                aria-current={active === item.id ? 'true' : undefined}
-                onClick={() => onClose(false)}
-              >
-                <span className="mobile-menu__index mono" aria-hidden="true">
-                  0{i + 1}
-                </span>
-                <span className="mobile-menu__label">{item.label}</span>
-                <span className="mobile-menu__arrow" aria-hidden="true">
-                  →
-                </span>
-              </a>
-            </li>
-          ))}
-        </ol>
-      </nav>
-      <div className="mobile-menu__foot">
-        <p className="mono">{site.hero.body}</p>
-        <a href={site.footer.privacy.href} className="mobile-menu__privacy mono" onClick={() => onClose(false)}>
-          {site.footer.privacy.label}
-        </a>
+      {/* Only the links and footer scroll (short landscape phones); the backing,
+          bands and the bar with Close stay fixed. */}
+      <div className="mobile-menu__scroll">
+        <nav aria-label="Site" className="mobile-menu__nav">
+          <ol className="mobile-menu__list">
+            {items.map((item, i) => (
+              <li key={item.id} style={{ ['--i' as string]: i }}>
+                <a
+                  href={item.href}
+                  className={`mobile-menu__link${item.id === 'start' ? ' mobile-menu__link--cta' : ''}`}
+                  aria-current={active === item.id ? 'true' : undefined}
+                  onClick={() => onClose(false)}
+                >
+                  <span className="mobile-menu__index mono" aria-hidden="true">
+                    0{i + 1}
+                  </span>
+                  <span className="mobile-menu__label">{item.label}</span>
+                  <span className="mobile-menu__arrow" aria-hidden="true">
+                    →
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ol>
+        </nav>
+        <div className="mobile-menu__foot">
+          <p className="mono">{site.hero.body}</p>
+          <a href={site.footer.privacy.href} className="mobile-menu__privacy mono" onClick={() => onClose(false)}>
+            {site.footer.privacy.label}
+          </a>
+        </div>
       </div>
     </div>
   );
