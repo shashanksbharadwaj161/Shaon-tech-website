@@ -70,7 +70,7 @@ function headerOffset(): number {
   return Number.isFinite(value) ? value : 64;
 }
 
-type ExportStatus = { readonly kind: 'done' | 'copied' | 'error'; readonly text: string; readonly id: number };
+type ExportStatus = { readonly kind: 'requested' | 'copied' | 'error'; readonly text: string; readonly id: number };
 
 export function BriefForm({ onStepChange }: { onStepChange?: (step: 1 | 2 | 3) => void }) {
   const { step, data } = useBriefState();
@@ -230,7 +230,12 @@ export function BriefForm({ onStepChange }: { onStepChange?: (step: 1 | 2 | 3) =
     const file = buildBriefFile(format, current, localIsoTimestamp(new Date()));
     try {
       downloadFile(file.filename, file.content, file.mime);
-      showExportStatus('done', `Downloaded ${file.filename}`);
+      // The page can only ask the browser to save; it cannot confirm the save
+      // happened (a browser or setting may block it silently).
+      showExportStatus(
+        'requested',
+        `Download requested: ${file.filename}. If your browser did not save it, open “Preview the text file” below to copy your brief.`,
+      );
     } catch {
       showExportStatus(
         'error',
