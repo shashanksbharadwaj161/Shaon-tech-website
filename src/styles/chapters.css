@@ -1162,6 +1162,14 @@
   }
 }
 
+/* Reduced motion: the still Process flows naturally at every breakpoint.
+   Two classes outrank both pinned-height rules (.process at 320vh / 260vh). */
+.process.process--still {
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+}
+
 .process-still {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

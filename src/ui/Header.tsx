@@ -30,11 +30,21 @@ export function Header({ active }: { active: SectionId | null }) {
       },
       { rootMargin: '0px 0px -92% 0px' },
     );
-    const observeAll = () => document.querySelectorAll('.section--paper, .site-footer').forEach((el) => io.observe(el));
+    // Paper chapters, the footer, and paper surfaces inside pages (commerce
+    // demo, brief card) — anything rendered with the light theme.
+    const observeAll = () => document.querySelectorAll('.section--paper, .site-footer, .theme-paper').forEach((el) => io.observe(el));
     observeAll();
-    const mo = new MutationObserver(() => observeAll());
-    mo.observe(document.getElementById('main') ?? document.body, { childList: true, subtree: false });
+    let raf = 0;
+    const mo = new MutationObserver(() => {
+      if (!raf)
+        raf = requestAnimationFrame(() => {
+          raf = 0;
+          observeAll();
+        });
+    });
+    mo.observe(document.getElementById('main') ?? document.body, { childList: true, subtree: true });
     return () => {
+      cancelAnimationFrame(raf);
       io.disconnect();
       mo.disconnect();
     };
