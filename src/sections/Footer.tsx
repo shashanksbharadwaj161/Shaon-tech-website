@@ -2,7 +2,7 @@ import { Logo } from '../brand/Logo';
 import { site } from '../content/site';
 
 export function Footer() {
-  const { footer } = site;
+  const { footer, contact } = site;
   return (
     <footer className="site-footer">
       <div className="site-footer__top">
@@ -10,6 +10,13 @@ export function Footer() {
           <Logo />
         </a>
         <p className="site-footer__line">{footer.line}</p>
+        <a href={contact.href} className="site-footer__contact">
+          <span className="site-footer__contact-label mono">Contact us</span>
+          <span className="site-footer__email">
+            <span>{contact.email}</span>
+            <span className="site-footer__contact-arrow" aria-hidden="true">↗</span>
+          </span>
+        </a>
       </div>
       <div className="site-footer__rule" aria-hidden="true" />
       <div className="site-footer__bottom">

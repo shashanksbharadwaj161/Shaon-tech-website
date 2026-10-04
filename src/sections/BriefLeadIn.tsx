@@ -5,7 +5,7 @@ import { MotionText } from '../ui/MotionText';
 
 /** Home chapter leading into the full /start-project brief. */
 export function BriefLeadIn() {
-  const { brief } = site;
+  const { brief, contact } = site;
   return (
     <section id="start" className="section section--ink brief-lead" aria-labelledby="start-title">
       <div className="brief-lead__copy" data-reveal>
@@ -28,7 +28,13 @@ export function BriefLeadIn() {
         </ol>
         <div className="brief-lead__actions">
           <CtaLink href={brief.cta.href} label={brief.cta.label} />
-          <p className="brief-lead__note mono">{brief.deliveryNote}</p>
+          <a href={contact.href} className="brief-lead__contact">
+            <span className="brief-lead__contact-label mono">Contact us</span>
+            <span className="brief-lead__email">
+              <span>{contact.email}</span><span aria-hidden="true"> ↗</span>
+            </span>
+          </a>
+          <p className="brief-lead__note mono">{contact.deliveryNote}</p>
         </div>
       </div>
       <div className="brief-lead__visual" data-reveal>

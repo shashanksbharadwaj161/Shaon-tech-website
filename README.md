@@ -12,7 +12,7 @@ real-time React Three Fiber scene and a complete SVG/CSS fallback.
 | `/work/product-workspace` | Studio concept: sample SaaS task workspace with search, status and category filters |
 | `/work/objects-commerce` | Studio concept: fictional capsule lamp, variants, editable sample cart (sample prices, no checkout) |
 | `/work/hospitality-stay` | Studio concept: fictional pavilion availability with validation (sample inventory, no booking) |
-| `/start-project` | Three-step project brief with local JSON / UTF-8 text download (nothing is sent) |
+| `/start-project` | Validated project brief sent via FormSubmit, with local JSON / UTF-8 text export |
 | `/privacy` | What the site actually stores and sends (almost nothing) |
 | anything else | A useful not-found page |
 
@@ -204,8 +204,15 @@ node --experimental-strip-types scripts/generate-favicon.ts   # Node ≥ 22.6
 
 ## Known limits
 
-- The brief cannot be sent: contact delivery is not connected. It can be
-  downloaded as JSON or UTF-8 text (or copied from the text preview). The page
+- The brief posts validated answers directly to FormSubmit for forwarding to
+  `mediashaon@gmail.com`. Before mail delivery works, submit a test from the
+  production site and activate the form using FormSubmit’s verification email
+  in that inbox. Inbox activation and receipt have not yet been verified.
+  The page distinguishes provider acceptance, activation required, and errors;
+  provider acceptance does not prove inbox delivery. Requests time out after
+  20 seconds, are cancelled on unmount, and never retry automatically.
+  Downloads as JSON or UTF-8 text (or copied text previews) remain available.
+  The page
   reports a download as *requested*, because a browser can block a save
   silently. Answers stay in memory for the visit (moving between pages keeps
   them); no storage API is used, and a reload or closed tab discards them.

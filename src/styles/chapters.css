@@ -1353,10 +1353,45 @@
 }
 
 .brief-lead__note {
+  flex-basis: 100%;
   color: var(--silver);
   letter-spacing: 0.12em;
-  max-width: 36ch;
+  max-width: 58ch;
 }
+
+.brief-lead__contact {
+  display: grid;
+  gap: 5px;
+  min-height: 48px;
+  max-width: 100%;
+  padding: 5px 0;
+  color: var(--ice);
+  border-radius: 4px;
+}
+
+.brief-lead__contact-label {
+  color: var(--silver);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.brief-lead__email {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 1rem;
+  font-weight: 560;
+}
+
+.brief-lead__email > span:first-child { overflow-wrap: anywhere; }
+.brief-lead__contact:hover .brief-lead__email,
+.brief-lead__contact:focus-visible .brief-lead__email {
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}
+
+.brief-lead__contact:focus-visible { outline: 2px solid var(--ice); outline-offset: 6px; }
 
 .brief-lead__visual {
   position: relative;

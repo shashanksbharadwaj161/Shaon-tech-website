@@ -1,13 +1,15 @@
 /**
- * Project brief — three steps, validated in place, downloaded as a local file.
+ * Project brief — three steps, validated in place, direct submission or local file.
  *
- * Nothing is sent anywhere. Answers live in memory (briefStore) so they
+ * Answers live in memory (briefStore) so they
  * survive leaving the page and coming back within the same visit; a reload
- * clears them. The only output is a JSON or text file the visitor's own
- * browser saves.
+ * clears them. Only an explicit Send posts the validated answers to FormSubmit
+ * for forwarding to the studio inbox. Local downloads remain available.
  */
 import { useEffect, useId, useLayoutEffect, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from 'react';
 import { flushSync } from 'react-dom';
+import { contact } from '../../content/site';
+import { sendBrief } from './briefDelivery';
 import { buildBriefFile, buildBriefText, downloadFile, localIsoTimestamp, type ExportFormat } from './briefExport';
 import {
   BUDGET_HINT,
@@ -35,10 +37,10 @@ import {
   type ProjectType,
   type Step,
 } from './briefModel';
-import { getBriefState, resetBriefState, setBriefStep, updateBriefData, useBriefState } from './briefStore';
+import { getBriefState, recordBriefAcceptance, resetBriefState, setBriefStep, updateBriefData, useBriefState } from './briefStore';
 import './brief.css';
+import { PATHS } from '../../router/routes';
 
-const DELIVERY_NOTICE = 'Contact delivery is not connected yet. Download your brief to keep a copy.';
 /** How long "Confirm start over" stays armed before it quietly reverts. */
 const CONFIRM_WINDOW_MS = 6000;
 
@@ -71,9 +73,10 @@ function headerOffset(): number {
 }
 
 type ExportStatus = { readonly kind: 'requested' | 'copied' | 'error'; readonly text: string; readonly id: number };
+type SendStatus = 'idle' | 'sending' | 'accepted' | 'activation-required' | 'error';
 
 export function BriefForm({ onStepChange }: { onStepChange?: (step: 1 | 2 | 3) => void }) {
-  const { step, data } = useBriefState();
+  const { step, data, acceptedAnswers } = useBriefState();
   const baseId = useId();
   const id = (name: string) => `${baseId}${name}`;
   const fieldId = (field: BriefField) => id(`field-${field}`);
@@ -84,9 +87,20 @@ export function BriefForm({ onStepChange }: { onStepChange?: (step: 1 | 2 | 3) =
   const [rangeCleared, setRangeCleared] = useState<{ from: Currency; to: Currency } | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [previewAt, setPreviewAt] = useState<string | null>(null);
+  const [sendStatus, setSendStatus] = useState<SendStatus>('idle');
+  const honeyRef = useRef<HTMLInputElement>(null);
+  const requestRef = useRef<AbortController | null>(null);
+  const requestTimerRef = useRef<number | null>(null);
 
   const rootRef = useRef<HTMLDivElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => () => {
+    requestRef.current?.abort();
+    requestRef.current = null;
+    if (requestTimerRef.current !== null) window.clearTimeout(requestTimerRef.current);
+    requestTimerRef.current = null;
+  }, []);
 
   // Report the visible step on mount and whenever it changes, without
   // re-firing when the parent passes a new callback identity.
@@ -152,6 +166,7 @@ export function BriefForm({ onStepChange }: { onStepChange?: (step: 1 | 2 | 3) =
       setExportStatus(null);
       setConfirmingReset(false);
       setPreviewAt(null);
+      if (requestRef.current === null) setSendStatus('idle');
       setBriefStep(next);
     });
     revealStep();
@@ -163,6 +178,7 @@ export function BriefForm({ onStepChange }: { onStepChange?: (step: 1 | 2 | 3) =
     const next = update(before.data);
     if (next === before.data) return;
     updateBriefData(() => next);
+    if (requestRef.current === null) setSendStatus('idle');
     setErrors((previous) => (hasErrors(previous) ? revalidateErrors(previous, before.step, next) : previous));
   }
 
@@ -212,21 +228,27 @@ export function BriefForm({ onStepChange }: { onStepChange?: (step: 1 | 2 | 3) =
     goTo(target);
   }
 
-  function handleDownload(format: ExportFormat) {
+  function validatedData(): BriefData | null {
     const { data: current } = getBriefState();
     // Step 1 is always valid by the time step 3 is reachable; checked again defensively.
     const projectErrors = validateStep(1, current);
     if (hasErrors(projectErrors)) {
       goTo(1);
       showErrors(1, projectErrors);
-      return;
+      return null;
     }
     const detailErrors = validateStep(3, current);
     if (hasErrors(detailErrors)) {
       setExportStatus(null);
       showErrors(3, detailErrors);
-      return;
+      return null;
     }
+    return current;
+  }
+
+  function handleDownload(format: ExportFormat) {
+    const current = validatedData();
+    if (current === null) return;
     const file = buildBriefFile(format, current, localIsoTimestamp(new Date()));
     try {
       downloadFile(file.filename, file.content, file.mime);
@@ -244,6 +266,31 @@ export function BriefForm({ onStepChange }: { onStepChange?: (step: 1 | 2 | 3) =
     }
   }
 
+  async function handleSend() {
+    if (requestRef.current !== null) return;
+    const current = validatedData();
+    if (current === null) return;
+    const answers = JSON.stringify(current);
+    if (answers === acceptedAnswers) return;
+    const controller = new AbortController();
+    requestRef.current = controller;
+    setSendStatus('sending');
+    const timeout = window.setTimeout(() => controller.abort(), 20_000);
+    requestTimerRef.current = timeout;
+    try {
+      const result = await sendBrief(current, localIsoTimestamp(new Date()), controller.signal, honeyRef.current?.value ?? '');
+      if (requestRef.current !== controller) return;
+      setSendStatus(result);
+      if (result === 'accepted') recordBriefAcceptance(answers);
+    } catch {
+      if (requestRef.current === controller) setSendStatus('error');
+    } finally {
+      window.clearTimeout(timeout);
+      if (requestTimerRef.current === timeout) requestTimerRef.current = null;
+      if (requestRef.current === controller) requestRef.current = null;
+    }
+  }
+
   async function handleCopy() {
     const text = buildBriefText(getBriefState().data, previewAt ?? localIsoTimestamp(new Date()));
     try {
@@ -256,6 +303,7 @@ export function BriefForm({ onStepChange }: { onStepChange?: (step: 1 | 2 | 3) =
   }
 
   function handleStartOver() {
+    if (requestRef.current !== null) return;
     if (!confirmingReset) {
       setConfirmingReset(true);
       announce('Press “Confirm start over” to clear every answer, or Escape to keep them.');
@@ -267,6 +315,7 @@ export function BriefForm({ onStepChange }: { onStepChange?: (step: 1 | 2 | 3) =
       setRangeCleared(null);
       setExportStatus(null);
       setPreviewAt(null);
+      setSendStatus('idle');
       resetBriefState();
     });
     announce('Brief cleared. You are back at step 1.');
@@ -420,6 +469,8 @@ export function BriefForm({ onStepChange }: { onStepChange?: (step: 1 | 2 | 3) =
   function renderReviewStep() {
     const groups = reviewGroups(data);
     const resetHintId = id('reset-hint');
+    const sending = sendStatus === 'sending';
+    const alreadyAccepted = acceptedAnswers === JSON.stringify(data);
     return (
       <>
         <form className="bf-form bf-section" noValidate onSubmit={(event) => event.preventDefault()} aria-labelledby={id('details-title')}>
@@ -427,7 +478,7 @@ export function BriefForm({ onStepChange }: { onStepChange?: (step: 1 | 2 | 3) =
             <h3 id={id('details-title')} className="bf-section__title">
               {DETAILS_TITLE}
             </h3>
-            <p className="field__hint">Written into the file you download, and nowhere else.</p>
+            <p className="field__hint">Used to respond to your enquiry. Your answers are sent only when you choose Send brief.</p>
           </div>
           <div className="bf-details">
             <TextField
@@ -437,6 +488,7 @@ export function BriefForm({ onStepChange }: { onStepChange?: (step: 1 | 2 | 3) =
               onValue={(name) => change((current) => ({ ...current, name }))}
               autoComplete="name"
               error={errors.name}
+              disabled={sending}
             />
             <TextField
               id={fieldId('email')}
@@ -446,6 +498,7 @@ export function BriefForm({ onStepChange }: { onStepChange?: (step: 1 | 2 | 3) =
               onValue={(email) => change((current) => ({ ...current, email }))}
               autoComplete="email"
               error={errors.email}
+              disabled={sending}
             />
             <TextField
               id={fieldId('company')}
@@ -454,6 +507,7 @@ export function BriefForm({ onStepChange }: { onStepChange?: (step: 1 | 2 | 3) =
               value={data.company}
               onValue={(company) => change((current) => ({ ...current, company }))}
               autoComplete="organization"
+              disabled={sending}
             />
           </div>
         </form>
@@ -465,7 +519,7 @@ export function BriefForm({ onStepChange }: { onStepChange?: (step: 1 | 2 | 3) =
               <div key={group.step} className="bf-review__group">
                 <div className="bf-review__head">
                   <h4 className="mono bf-review__title">{group.title}</h4>
-                  <button type="button" className="btn btn--quiet bf-edit" onClick={() => handleEdit(group.step)}>
+                  <button type="button" className="btn btn--quiet bf-edit" disabled={sending} onClick={() => handleEdit(group.step)}>
                     Edit<span className="visually-hidden"> {group.title}</span>
                   </button>
                 </div>
@@ -482,14 +536,32 @@ export function BriefForm({ onStepChange }: { onStepChange?: (step: 1 | 2 | 3) =
           </div>
         </div>
 
-        <div className="bf-section bf-export panel">
-          <h3 className="bf-section__title">Download your brief</h3>
+        <div className="bf-section bf-export panel" aria-busy={sending}>
+          <h3 className="bf-section__title">Email your brief</h3>
           <p className="notice bf-notice">
             <InfoIcon />
-            <span>{DELIVERY_NOTICE}</span>
+            <span>{contact.deliveryNote}</span>
           </p>
+          <a className="bf-email-address" href={contact.href}>{contact.email}</a>
+          <div className="bf-honey" aria-hidden="true">
+            <label htmlFor={id('website')}>Leave this empty</label>
+            <input ref={honeyRef} id={id('website')} name="_honey" type="text" tabIndex={-1} autoComplete="off" />
+          </div>
           <div className="bf-export__actions">
-            <button type="button" className="btn btn--primary" onClick={() => handleDownload('json')}>
+            <button type="button" className="btn btn--primary" onClick={() => void handleSend()} disabled={sending || alreadyAccepted} aria-describedby={id('send-help')}>
+              {sending ? 'Sending…' : alreadyAccepted ? 'Brief submitted' : sendStatus === 'error' ? 'Try sending again' : 'Send brief'}
+            </button>
+          </div>
+          <p id={id('send-help')} className="field__hint">Send shares these answers with FormSubmit to email ShaOn Tech. <a href={PATHS.privacy}>How your answers are handled</a></p>
+          <p className="bf-export__status" role="status" aria-live="polite" aria-atomic="true" data-kind={sendStatus === 'error' ? 'error' : undefined}>
+            {sending && 'Submitting your brief…'}
+            {alreadyAccepted && 'The form service accepted your brief for emailing to ShaOn Tech. Inbox delivery is not confirmed here. Keep a copy below.'}
+            {sendStatus === 'activation-required' && <>Email delivery is awaiting the studio’s inbox verification. Your answers are kept. Download your brief and email it to <a href={contact.href}>{contact.email}</a>.</>}
+            {sendStatus === 'error' && <>We could not confirm submission. Your answers are kept. Try again, or download the brief and email it to <a href={contact.href}>{contact.email}</a>.</>}
+          </p>
+          <h3 className="bf-section__title bf-download-title">Keep a copy</h3>
+          <div className="bf-export__actions">
+            <button type="button" className="btn btn--ghost" onClick={() => handleDownload('json')}>
               <DownloadIcon />
               Download JSON
             </button>
@@ -531,12 +603,13 @@ export function BriefForm({ onStepChange }: { onStepChange?: (step: 1 | 2 | 3) =
         </div>
 
         <div className="bf-actions bf-actions--final">
-          <button type="button" className="btn btn--ghost" onClick={() => goTo(2)}>
+          <button type="button" className="btn btn--ghost" disabled={sending} onClick={() => goTo(2)}>
             Back
           </button>
           <button
             type="button"
             className="btn btn--quiet bf-push bf-reset"
+            disabled={sending}
             data-armed={confirmingReset}
             aria-describedby={confirmingReset ? resetHintId : undefined}
             onClick={handleStartOver}
@@ -726,9 +799,10 @@ interface TextFieldProps {
   type?: 'text' | 'email';
   optional?: boolean;
   error?: string;
+  disabled?: boolean;
 }
 
-function TextField({ id, label, value, onValue, autoComplete, type = 'text', optional = false, error }: TextFieldProps) {
+function TextField({ id, label, value, onValue, autoComplete, type = 'text', optional = false, error, disabled = false }: TextFieldProps) {
   const errorId = `${id}-error`;
   const invalid = error !== undefined;
   const isEmail = type === 'email';
@@ -753,6 +827,7 @@ function TextField({ id, label, value, onValue, autoComplete, type = 'text', opt
         className="input"
         type={type}
         value={value}
+        disabled={disabled}
         onChange={(event) => onValue(event.target.value)}
         autoComplete={autoComplete}
         spellCheck={isEmail ? false : undefined}

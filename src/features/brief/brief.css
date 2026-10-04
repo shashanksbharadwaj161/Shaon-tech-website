@@ -471,6 +471,27 @@
   color: var(--danger);
 }
 
+.bf-email-address {
+  justify-self: start;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--accent-text);
+  font-weight: 620;
+  text-underline-offset: 4px;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+
+.bf-download-title {
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.bf-honey {
+  display: none;
+}
+
 /* ---------- Text preview ---------- */
 .bf-preview {
   border-top: 1px solid var(--line);

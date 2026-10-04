@@ -36,7 +36,7 @@ const MINIMAL: BriefData = {
   email: 'aiko@example.com',
 };
 
-/** Phrases that would claim the brief went somewhere. "Not sent" is the only allowed mention. */
+/** Exports describe a local copy, not a tracked online delivery result. */
 const DELIVERY_CLAIM = /\b(submitted|delivered|received|on its way|we'?ll be in touch|thank you|sent to)\b/i;
 
 describe('buildBriefJson', () => {
@@ -49,7 +49,7 @@ describe('buildBriefJson', () => {
       budget: { currency: 'JPY', range: 'jpy-500000-1500000', rangeLabel: '¥500,000–¥1,500,000' },
       timing: { value: '1-3-months', label: '1–3 months' },
       contact: { name: '山田 花子', email: 'hanako@example.jp', company: 'Example Studio Co.' },
-      delivery: "Not sent. Created and downloaded in the visitor's browser.",
+      delivery: DELIVERY_LINE,
     });
   });
 
@@ -141,16 +141,17 @@ describe('honesty: no output claims delivery', () => {
     ['text', buildBriefText(FULL, CREATED)],
     ['minimal JSON', buildBriefJson(MINIMAL, CREATED)],
     ['minimal text', buildBriefText(MINIMAL, CREATED)],
-  ])('%s says "Not sent" and nothing that implies sending', (_label, output) => {
+  ])('%s describes a local copy without claiming online delivery', (_label, output) => {
     expect(output).not.toMatch(DELIVERY_CLAIM);
     const mentions = output.match(/\bsent\b/gi) ?? [];
-    expect(mentions).toHaveLength(1);
-    expect(output).toContain('Not sent.');
+    expect(mentions).toHaveLength(0);
+    expect(output).toContain('Local copy');
+    expect(output).not.toContain('Not sent.');
   });
 
-  it('the delivery field is the fixed "Not sent" line', () => {
+  it('the delivery field explicitly does not record online submission status', () => {
     expect(JSON.parse(buildBriefJson(FULL, CREATED)).delivery).toBe(DELIVERY_LINE);
-    expect(DELIVERY_LINE.startsWith('Not sent.')).toBe(true);
+    expect(DELIVERY_LINE).toContain('does not record online submission');
   });
 });
 

@@ -4,9 +4,9 @@ import { BriefForm } from '../features/brief/BriefForm';
 import { PATHS } from '../router/routes';
 import { BriefPlanes } from '../ui/BriefPlanes';
 
-/** /start-project — the full three-step brief. Nothing is sent; the brief can be downloaded. */
+/** /start-project — validated project brief, contact and local export. */
 export default function StartProjectPage() {
-  const { brief } = site;
+  const { brief, contact } = site;
   const [step, setStep] = useState<1 | 2 | 3>(1);
   return (
     <article className="brief-page" aria-labelledby="brief-title">
@@ -20,7 +20,7 @@ export default function StartProjectPage() {
         </h1>
         <p className="brief-page__intro">{brief.body}</p>
         <p className="brief-page__note mono">
-          {brief.deliveryNote} <a href={PATHS.privacy}>How your answers are handled</a>
+          {contact.deliveryNote} <a href={PATHS.privacy}>How your answers are handled</a>
         </p>
       </header>
       <div className="brief-stage" data-step={step}>

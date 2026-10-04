@@ -204,6 +204,42 @@ html[data-motion='reduced'] .construction__lines line {
   letter-spacing: -0.04em;
 }
 
+.site-footer__contact {
+  display: grid;
+  gap: 6px;
+  min-height: 52px;
+  max-width: 100%;
+  padding: 6px 0;
+  color: var(--cobalt-deep);
+  border-radius: 4px;
+}
+
+.site-footer__contact-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.site-footer__email {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 12px;
+  font-size: clamp(1.05rem, 1.75vw, 1.8rem);
+  font-weight: 620;
+  letter-spacing: -0.035em;
+}
+
+.site-footer__email > span:first-child { overflow-wrap: anywhere; }
+.site-footer__contact-arrow { transition: transform 0.2s var(--ease-out); }
+.site-footer__contact:hover .site-footer__email,
+.site-footer__contact:focus-visible .site-footer__email {
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}
+
+.site-footer__contact:hover .site-footer__contact-arrow { transform: translate(2px, -2px); }
+.site-footer__contact:focus-visible { outline: 2px solid var(--cobalt-deep); outline-offset: 6px; }
+
 .site-footer__rule {
   height: 1px;
   margin: 40px 0 28px;

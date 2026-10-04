@@ -1,7 +1,8 @@
 /**
  * All visitor-facing copy lives here so it can be edited without touching layout
  * or motion code. Keep it factual: no invented clients, testimonials, metrics,
- * team size, founders, history, awards, address, city or email. Anything that
+ * team size, founders, history, awards, address or city. Contact details must be
+ * supplied by the studio owner. Anything that
  * is not real client work is labelled as a studio concept.
  */
 
@@ -54,10 +55,17 @@ export interface BriefStep {
   body: string;
 }
 
+export const contact = {
+  email: 'mediashaon@gmail.com',
+  href: 'mailto:mediashaon@gmail.com',
+  deliveryNote: 'Send your brief to mediashaon@gmail.com. You can also download a copy.',
+} as const;
+
 export const site = {
   name: 'ShaOn Tech',
   nameParts: { strong: 'ShaOn', light: 'Tech' },
   descriptor: 'Website and app design / development studio',
+  contact,
 
   nav: [
     { id: 'work', label: 'Work', href: '/#work' },
@@ -223,14 +231,14 @@ export const site = {
   brief: {
     eyebrow: 'Start a project',
     title: 'What are you imagining?',
-    body: 'Three short steps: the project, an optional budget and timing, then your details. At the end you can download the brief to keep.',
+    body: 'Three short steps: the project, an optional budget and timing, then your details. Review your brief, send it online to ShaOn Tech, or download a copy to keep.',
     steps: [
       { index: '01', title: 'Project & goals', body: 'What you want to make and what it should achieve.' },
       { index: '02', title: 'Budget & timing', body: 'Optional. A rough range in USD or JPY, or “not sure”.' },
-      { index: '03', title: 'Review & download', body: 'Your name and email, a final check, then JSON or text files.' },
+      { index: '03', title: 'Review & send', body: 'Your name and email, a final check, then send your brief or download a copy.' },
     ] satisfies BriefStep[],
     cta: { label: 'Start the brief', href: '/start-project' } satisfies LinkAction,
-    deliveryNote: 'Contact delivery is not connected yet. Download your brief to keep a copy.',
+    deliveryNote: contact.deliveryNote,
   },
 
   footer: {

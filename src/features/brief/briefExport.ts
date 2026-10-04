@@ -3,7 +3,7 @@
  *
  * Builders are pure (data + timestamp in, string out) and tested. The single
  * DOM helper, `downloadFile`, hands a file to the visitor's own browser.
- * Nothing is sent anywhere.
+ * This export module sends nothing; online delivery is handled separately.
  */
 import {
   BUDGET_HINT,
@@ -24,7 +24,7 @@ import {
 
 export const BRIEF_FORMAT = 'shaon-tech-project-brief';
 export const BRIEF_VERSION = 1;
-export const DELIVERY_LINE = "Not sent. Created and downloaded in the visitor's browser.";
+export const DELIVERY_LINE = "Local copy created in the visitor's browser. This file does not record online submission or inbox delivery.";
 
 export const JSON_MIME = 'application/json;charset=utf-8';
 export const TEXT_MIME = 'text/plain;charset=utf-8';

@@ -3,7 +3,7 @@
  *
  * Pure data and functions only (no React, no DOM) so every rule can be tested
  * in isolation. Nothing here sends or stores anything: the brief lives in
- * memory until the visitor downloads it.
+ * memory until the visitor downloads it or chooses to submit it.
  */
 
 export type Step = 1 | 2 | 3;
@@ -38,7 +38,7 @@ export interface Option<T extends string> {
 export const STEPS: readonly { readonly step: Step; readonly title: string; readonly summary: string }[] = [
   { step: 1, title: 'Project & goals', summary: 'What you want to make and what it should achieve.' },
   { step: 2, title: 'Budget & timing', summary: 'Optional. A rough range in USD or JPY, or “not sure”.' },
-  { step: 3, title: 'Review & download', summary: 'Your details, a final check, then a JSON or text file to keep.' },
+  { step: 3, title: 'Review & send', summary: 'Your details, a final check, then send the brief or keep a file.' },
 ];
 
 export const GOALS_MAX = 2000;

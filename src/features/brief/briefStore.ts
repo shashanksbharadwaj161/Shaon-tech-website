@@ -11,9 +11,11 @@ import { EMPTY_BRIEF, type BriefData, type Step } from './briefModel';
 export interface BriefState {
   readonly step: Step;
   readonly data: BriefData;
+  /** In-memory duplicate guard, kept across routes with the draft. */
+  readonly acceptedAnswers: string | null;
 }
 
-export const INITIAL_BRIEF_STATE: BriefState = Object.freeze({ step: 1, data: EMPTY_BRIEF });
+export const INITIAL_BRIEF_STATE: BriefState = Object.freeze({ step: 1, data: EMPTY_BRIEF, acceptedAnswers: null });
 
 type Listener = () => void;
 
@@ -41,6 +43,10 @@ export function updateBriefData(update: (data: BriefData) => BriefData): void {
 
 export function setBriefStep(step: Step): void {
   setBriefState((previous) => (previous.step === step ? previous : { ...previous, step }));
+}
+
+export function recordBriefAcceptance(answers: string): void {
+  setBriefState((previous) => previous.acceptedAnswers === answers ? previous : { ...previous, acceptedAnswers: answers });
 }
 
 /** Clears every answer and returns to step 1. */

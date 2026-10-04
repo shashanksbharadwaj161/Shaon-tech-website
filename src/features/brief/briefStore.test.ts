@@ -4,6 +4,7 @@ import {
   INITIAL_BRIEF_STATE,
   getBriefState,
   resetBriefState,
+  recordBriefAcceptance,
   setBriefStep,
   subscribeBrief,
   updateBriefData,
@@ -12,6 +13,19 @@ import {
 beforeEach(() => resetBriefState());
 
 describe('briefStore', () => {
+  it('keeps the accepted draft guard across routes and clears it on start over', () => {
+    updateBriefData((data) => ({ ...data, name: 'Aiko' }));
+    const answers = JSON.stringify(getBriefState().data);
+    const unsubscribe = subscribeBrief(() => undefined);
+    recordBriefAcceptance(answers);
+    unsubscribe();
+    setBriefStep(2);
+    expect(getBriefState().acceptedAnswers).toBe(answers);
+    updateBriefData((data) => ({ ...data, name: 'Another name' }));
+    expect(JSON.stringify(getBriefState().data)).not.toBe(getBriefState().acceptedAnswers);
+    resetBriefState();
+    expect(getBriefState().acceptedAnswers).toBeNull();
+  });
   it('keeps answers and step after every subscriber leaves (navigating away and back)', () => {
     const unsubscribe = subscribeBrief(() => undefined);
     updateBriefData((data) => ({ ...data, projectType: 'app', goals: 'A field notebook.' }));

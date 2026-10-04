@@ -8,7 +8,7 @@ interface BriefPlanesProps {
 const PLANES = [
   { key: 'project', label: 'Project & goals' },
   { key: 'budget', label: 'Budget & timing' },
-  { key: 'review', label: 'Review & download' },
+  { key: 'review', label: 'Review & send' },
 ] as const;
 
 /**
