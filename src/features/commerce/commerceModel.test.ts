@@ -9,6 +9,7 @@ import {
   describeRemove,
   EMPTY_CART,
   FINISHES,
+  focusAfterRemove,
   formatPrice,
   formatPriceDelta,
   lineQty,
@@ -47,6 +48,22 @@ describe('variants and sample prices', () => {
 
   it('names variants in plain words', () => {
     expect(VARIANTS.find((v) => v.id === 'large-brushed')?.name).toBe('Large, Brushed silver');
+  });
+
+  it('uses the agreed option labels and drawing scales (Small 1, Large 1.22)', () => {
+    expect(FINISHES.map((f) => [f.id, f.label])).toEqual([
+      ['polished', 'Polished silver'],
+      ['brushed', 'Brushed silver'],
+    ]);
+    expect(SIZES.map((s) => [s.id, s.label, s.scale])).toEqual([
+      ['small', 'Small', 1],
+      ['large', 'Large', 1.22],
+    ]);
+  });
+
+  it('allows 1 to 10 of a variant per line', () => {
+    expect(MAX_QTY).toBe(10);
+    expect(clampQty(-1)).toBe(1);
   });
 
   it('refuses to price an unknown variant rather than returning a wrong number', () => {
@@ -97,11 +114,13 @@ describe('addToCart', () => {
     expect(addToCart(cart, '', 1)).toBe(cart);
   });
 
-  it('ignores zero, negative and non-numeric quantities', () => {
+  it('ignores zero, negative, fractional-below-one and non-finite quantities', () => {
     const cart = addToCart(EMPTY_CART, 'small-polished', 1);
     expect(addToCart(cart, 'small-polished', 0)).toBe(cart);
     expect(addToCart(cart, 'large-polished', -3)).toBe(cart);
+    expect(addToCart(cart, 'large-polished', 0.5)).toBe(cart);
     expect(addToCart(cart, 'large-polished', Number.NaN)).toBe(cart);
+    expect(addToCart(cart, 'large-polished', Number.POSITIVE_INFINITY)).toBe(cart);
   });
 
   it('truncates fractional quantities to whole lamps', () => {
@@ -145,7 +164,14 @@ describe('setQuantity', () => {
 
   it('is a no-op for a non-numeric quantity or an unchanged one', () => {
     expect(setQuantity(base, 'small-polished', Number.NaN)).toBe(base);
+    expect(setQuantity(base, 'small-polished', Number.POSITIVE_INFINITY)).toBe(base);
     expect(setQuantity(base, 'small-polished', 2)).toBe(base);
+  });
+
+  it('truncates a fractional quantity to whole lamps', () => {
+    expect(lineQty(setQuantity(base, 'large-brushed', 3.9), 'large-brushed')).toBe(3);
+    // 2.4 truncates to the current 2, so nothing changes.
+    expect(setQuantity(base, 'small-polished', 2.4)).toBe(base);
   });
 });
 
@@ -159,12 +185,56 @@ describe('removeLine', () => {
     expect(removeLine(base, 'small-polished')).toEqual([{ variantId: 'large-brushed', qty: 1 }]);
   });
 
-  it('returns the same cart when the variant has no line', () => {
+  it('returns the same cart when the variant has no line or is unknown', () => {
     expect(removeLine(base, 'small-brushed')).toBe(base);
+    expect(removeLine(base, 'medium-gold')).toBe(base);
   });
 
   it('can empty the cart', () => {
     expect(removeLine(removeLine(base, 'small-polished'), 'large-brushed')).toEqual([]);
+  });
+
+  it('keeps the order of the remaining lines when a middle line goes', () => {
+    const three = frozen([
+      { variantId: 'small-polished', qty: 1 },
+      { variantId: 'large-brushed', qty: 2 },
+      { variantId: 'small-brushed', qty: 3 },
+    ]);
+    expect(removeLine(three, 'large-brushed').map((l) => l.variantId)).toEqual(['small-polished', 'small-brushed']);
+  });
+});
+
+describe('focusAfterRemove', () => {
+  const three = frozen([
+    { variantId: 'small-polished', qty: 1 },
+    { variantId: 'large-brushed', qty: 2 },
+    { variantId: 'small-brushed', qty: 3 },
+  ]);
+
+  it('moves to the next line when there is one', () => {
+    expect(focusAfterRemove(three, 'small-polished')).toBe('large-brushed');
+    expect(focusAfterRemove(three, 'large-brushed')).toBe('small-brushed');
+  });
+
+  it('falls back to the previous line when the last line goes', () => {
+    expect(focusAfterRemove(three, 'small-brushed')).toBe('large-brushed');
+  });
+
+  it('returns null when the cart will be empty (focus the cart heading)', () => {
+    expect(focusAfterRemove([{ variantId: 'large-polished', qty: 1 }], 'large-polished')).toBeNull();
+  });
+
+  it('returns null for a variant that has no line', () => {
+    expect(focusAfterRemove(three, 'large-polished')).toBeNull();
+    expect(focusAfterRemove(EMPTY_CART, 'small-polished')).toBeNull();
+  });
+
+  it('always names a line that survives the removal', () => {
+    for (const line of three) {
+      const target = focusAfterRemove(three, line.variantId);
+      expect(target).not.toBe(line.variantId);
+      expect(removeLine(three, line.variantId).some((l) => l.variantId === target)).toBe(true);
+    }
   });
 });
 
@@ -182,6 +252,19 @@ describe('immutability', () => {
     const removed = removeLine(base, 'small-polished');
     expect(JSON.stringify(base)).toBe(snapshot);
     for (const next of [added, appended, set, removed]) expect(next).not.toBe(base);
+  });
+
+  it('leaves inputs untouched in the read-only helpers too', () => {
+    const base = frozen([
+      { variantId: 'small-polished', qty: 2 },
+      { variantId: 'large-brushed', qty: 1 },
+    ]);
+    const snapshot = JSON.stringify(base);
+    cartTotals(base);
+    describeCart(base);
+    focusAfterRemove(base, 'small-polished');
+    describeAdd(base, addToCart(base, 'small-polished', 1), 'small-polished', 1);
+    expect(JSON.stringify(base)).toBe(snapshot);
   });
 });
 
@@ -210,6 +293,19 @@ describe('cartTotals', () => {
     ];
     expect(cart.map(lineTotalCents)).toEqual([54000, 44000]);
     expect(cartTotals(cart).subtotalCents).toBe(98000);
+  });
+
+  it('stays exact through a sequence of adds, edits and removals', () => {
+    let cart = addToCart(EMPTY_CART, 'small-brushed', 2); // 2 × $180
+    cart = addToCart(cart, 'large-polished', 1); // + 1 × $220
+    cart = addToCart(cart, 'small-brushed', 1); // 3 × $180
+    cart = setQuantity(cart, 'large-polished', 4); // 4 × $220
+    cart = addToCart(cart, 'large-brushed', 9); // + 9 × $240
+    cart = setQuantity(cart, 'large-brushed', 12); // clamped to 10 × $240
+    cart = removeLine(cart, 'small-brushed');
+    // 4 × 22000 + 10 × 24000 = 328000
+    expect(cartTotals(cart)).toEqual({ items: 14, subtotalCents: 328000 });
+    expect(formatPrice(cartTotals(cart).subtotalCents)).toBe('$3,280');
   });
 
   it('ignores lines whose variant is unknown', () => {
@@ -246,7 +342,9 @@ describe('formatPrice', () => {
 
   it('formats choice-card deltas', () => {
     expect(formatPriceDelta(2000)).toBe('+$20');
+    expect(formatPriceDelta(6000)).toBe('+$60');
     expect(formatPriceDelta(0)).toBe('Included');
+    expect(formatPriceDelta(-2000)).toBe('−$20');
   });
 });
 

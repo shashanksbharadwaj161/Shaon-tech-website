@@ -106,7 +106,9 @@
   color: var(--accent-text);
 }
 
-.ws-search__input {
+/* Two classes so the icon gap wins over .input's padding whatever order the
+   stylesheets load in. */
+.ws-search .ws-search__input {
   appearance: none;
   padding-left: 42px;
 }
@@ -137,7 +139,9 @@
   margin-top: 4px;
 }
 
-.ws-chip {
+/* Scoped under .ws so the 44px target and the press transition win over
+   .chip (40px) whatever order the stylesheets load in. */
+.ws .ws-chip {
   min-height: 44px;
   padding: 0 12px;
   transition:
@@ -147,7 +151,7 @@
     transform 0.3s var(--ease-spring);
 }
 
-.ws-chip:active {
+.ws .ws-chip:active {
   transform: scale(0.96);
 }
 
@@ -161,9 +165,14 @@
 }
 
 /* Touch screens keep :hover after a tap; without this, a chip just switched
-   off would keep the accent border and still look half-selected. */
+   off would keep the accent border and still look half-selected, and the
+   search box, category picker and Reset button would look focused or active
+   long after the tap. Keyboard focus styles (:focus-visible) are untouched. */
 @media (hover: none) {
-  .ws-chip:not([aria-pressed='true']):hover {
+  .ws-chip:not([aria-pressed='true']):hover,
+  .ws .ws-reset:hover,
+  .ws .input:hover:not(:focus-visible),
+  .ws .select:hover:not(:focus-visible) {
     border-color: var(--line-strong);
   }
 }

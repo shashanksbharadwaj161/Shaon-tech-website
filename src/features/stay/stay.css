@@ -150,10 +150,12 @@
 }
 
 /* Focus moves (invalid field, results) and the post-check reveal must land
-   clear of the fixed glass header. */
+   clear of the fixed glass header. Focus scrolling uses the focused element's
+   own margin, so the programmatically focused results heading needs it too. */
 .st .input,
 .st .select,
-.st-results__head {
+.st-results__head,
+.st-results__title {
   scroll-margin-top: calc(var(--header-h) + 20px);
 }
 
@@ -570,11 +572,12 @@
   grid-template-columns: repeat(var(--st-n, 1), minmax(0, 1fr));
   gap: 3px;
   max-width: calc(var(--st-n, 1) * 46px);
-  transition: opacity 0.3s;
 }
 
-.st-strip[data-dim='true'] {
-  opacity: 0.6;
+/* Too small for the party: dim only the bars. Dimming the whole strip would
+   drop the taken-night day numbers to about 3:1 contrast on ink. */
+.st-strip[data-dim='true'] .st-night__bar {
+  opacity: 0.55;
 }
 
 .st-night {
@@ -602,7 +605,7 @@
 
 .st-night__day {
   font-family: var(--font-mono);
-  font-size: 0.625rem;
+  font-size: 0.6875rem;
   line-height: 1;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
@@ -631,14 +634,12 @@
   }
 }
 
+/* No `to` frame: bars grow into their own resting opacity (dimmed or not),
+   so a dimmed bar does not flash to full strength at the end. */
 @keyframes st-grow {
   from {
     opacity: 0;
     transform: scaleY(0.2);
-  }
-  to {
-    opacity: 1;
-    transform: none;
   }
 }
 

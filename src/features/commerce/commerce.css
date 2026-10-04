@@ -24,6 +24,18 @@
   margin: 0;
 }
 
+/* Rapid repeat taps act on the control instead of triggering double-tap
+   zoom. Vertical scroll, panning and pinch-zoom stay native. */
+.cm :is(button, .choice) {
+  touch-action: manipulation;
+}
+
+/* Focus moves (Tab, Remove, "Choose a variant") land clear of the fixed
+   glass header. */
+.cm :is(button, input, [tabindex='-1']) {
+  scroll-margin-top: calc(var(--header-h) + 20px);
+}
+
 /* ---------- Head ---------- */
 .cm__head {
   display: grid;
@@ -52,7 +64,10 @@
 }
 
 .cm__sample {
+  max-width: 100%;
   margin-top: 4px;
+  /* The shared label never wraps; on a zoomed phone it must, not overflow. */
+  white-space: normal;
 }
 
 /* ---------- Layout ---------- */
@@ -126,19 +141,21 @@
   animation: cm-fade-in 0.45s var(--ease-out) both;
 }
 
+/* Every note text sits in the same cell: the note's height is the tallest
+   text, so switching finish never shifts the picker below (phones without
+   scroll anchoring would otherwise jump under the finger). */
 .cm-gallery__note {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 6px minmax(0, 1fr);
+  column-gap: 10px;
+  margin-top: -4px;
   color: var(--muted);
   font-size: 0.86rem;
-  animation: cm-rise 0.35s var(--ease-out) both;
 }
 
 .cm-gallery__note::before {
   content: '';
-  flex: none;
+  grid-area: 1 / 1;
   width: 6px;
   height: 6px;
   margin-top: 0.5em;
@@ -146,13 +163,41 @@
   background: var(--accent);
 }
 
+.cm-gallery__note-text {
+  grid-area: 1 / 2;
+  min-width: 0;
+}
+
+/* Hidden texts keep their space but leave the accessibility tree. */
+.cm-gallery__note-text:not([data-on='true']) {
+  visibility: hidden;
+}
+
+.cm-gallery__note-text[data-on='true'] {
+  animation: cm-rise 0.35s var(--ease-out) both;
+}
+
+/* Render file missing: MediaImage keeps the code drawing (which follows the
+   selection) under the render caption. Say so plainly instead of claiming
+   the render is on screen. */
+.cm-gallery:has(.cm-gallery__media[data-state='failed']) .cm-gallery__note-text {
+  visibility: hidden;
+  animation: none;
+}
+
+.cm-gallery:has(.cm-gallery__media[data-state='failed']) .cm-gallery__note-text--fallback {
+  visibility: visible;
+}
+
+/* Above the stage: render and drawing captions wrap to different heights, so
+   a switcher below the stage would move between taps. */
 .cm-gallery__views {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 10px 16px;
-  padding-top: 14px;
-  border-top: 1px solid var(--line);
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
 }
 
 .cm-gallery__views-label {
@@ -231,12 +276,19 @@
   color: var(--accent-text);
 }
 
+/* Beside the legend when there is room (every phone at default zoom); on its
+   own line in a narrow or zoomed container so it never overlaps the legend. */
 .cm-group__meta {
-  position: absolute;
-  top: 0.15em;
-  right: 0;
   color: var(--muted);
   letter-spacing: 0.14em;
+}
+
+@container (min-width: 18em) {
+  .cm-group__meta {
+    position: absolute;
+    top: 0.15em;
+    right: 0;
+  }
 }
 
 .cm .cm-group__grid {
@@ -354,9 +406,6 @@
   color: var(--text);
   font-size: 1.25rem;
   line-height: 1;
-  /* Rapid repeat taps must step the value, not trigger double-tap zoom.
-     Panning and pinch-zoom stay native. */
-  touch-action: manipulation;
   transition:
     background-color 0.2s,
     color 0.2s,
@@ -615,8 +664,21 @@
   text-underline-offset: 4px;
 }
 
-.cm-line__remove:hover {
-  text-decoration-color: currentColor;
+@media (hover: hover) {
+  .cm-line__remove:hover {
+    text-decoration-color: currentColor;
+  }
+}
+
+/* Very narrow (zoomed) cart: the stepper no longer fits beside Remove, so
+   Remove takes its own row instead of overlapping it. */
+@container (max-width: 15em) {
+  .cm-line {
+    grid-template-areas:
+      'thumb info total'
+      'qty qty qty'
+      'remove remove remove';
+  }
 }
 
 @container (min-width: 560px) {

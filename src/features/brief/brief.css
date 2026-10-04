@@ -1,0 +1,567 @@
+/* =========================================================
+   Project brief — three steps, validated in place, downloaded locally.
+   All classes are prefixed .bf- ; shared controls come from controls.css.
+   Sits on the paper card of /start-project (.theme-paper).
+   ========================================================= */
+
+.bf {
+  /* Inline-size containment: the width comes from the card, never the content. */
+  container: bf / inline-size;
+  display: grid;
+  gap: 30px;
+  min-width: 0;
+  font-family: var(--font-sans);
+  scroll-margin-top: calc(var(--header-h, 64px) + 16px);
+}
+
+/* ---------- Progress rail ---------- */
+.bf-progress {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.bf-progress__item {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  min-width: 0;
+  padding-top: 12px;
+  border-top: 2px solid var(--line);
+  color: var(--muted);
+  transition: color 0.3s;
+}
+
+/* The cobalt fill draws across as each step is reached. */
+.bf-progress__item::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.6s var(--ease-out);
+}
+
+.bf-progress__item[data-state='done']::before,
+.bf-progress__item[data-state='current']::before {
+  transform: scaleX(1);
+}
+
+.bf-progress__index {
+  line-height: 1.4;
+  letter-spacing: 0.18em;
+}
+
+.bf-progress__item[data-state='done'] .bf-progress__index,
+.bf-progress__item[data-state='current'] .bf-progress__index {
+  color: var(--accent-text);
+}
+
+.bf-progress__title {
+  font-size: 0.8rem;
+  font-weight: 540;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+
+.bf-progress__item[data-state='current'] {
+  color: var(--text);
+}
+
+.bf-progress__item[data-state='current'] .bf-progress__title {
+  font-weight: 660;
+}
+
+@container bf (min-width: 560px) {
+  .bf-progress {
+    gap: 16px;
+  }
+
+  .bf-progress__title {
+    font-size: 0.9rem;
+  }
+}
+
+/* ---------- Step ---------- */
+@keyframes bf-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.bf-step {
+  display: grid;
+  gap: 30px;
+  min-width: 0;
+  animation: bf-enter 0.5s var(--ease-out) both;
+}
+
+.bf-step__head {
+  display: grid;
+  gap: 10px;
+}
+
+.bf-step__count {
+  color: var(--accent-text);
+}
+
+.bf-step__title {
+  font-size: clamp(1.8rem, 1.3rem + 3.2cqi, 2.75rem);
+  font-weight: 720;
+  line-height: 0.98;
+  letter-spacing: -0.048em;
+  scroll-margin-top: calc(var(--header-h, 64px) + 24px);
+}
+
+.bf-step__summary {
+  max-width: 54ch;
+  color: var(--muted);
+  font-size: 0.98rem;
+}
+
+/* ---------- Fields and groups ---------- */
+.bf-form {
+  display: grid;
+  gap: 32px;
+  min-width: 0;
+}
+
+/* A hairline between consecutive questions. */
+.bf-rule {
+  padding-top: 28px;
+  border-top: 1px solid var(--line);
+}
+
+.bf-cluster {
+  display: grid;
+  gap: 26px;
+  min-width: 0;
+}
+
+.bf-field,
+.bf-group {
+  scroll-margin: calc(var(--header-h, 64px) + 24px) 0 24px;
+}
+
+.bf-legend,
+.bf-label {
+  font-size: 1.02rem;
+  font-weight: 620;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+}
+
+.bf-group > .bf-legend {
+  margin-bottom: 4px;
+}
+
+/* A real space precedes "(optional)" so it is part of the accessible name; keep the visual gap tight. */
+.bf .field__optional {
+  margin-left: 0.1em;
+}
+
+.bf-options {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  min-width: 0;
+}
+
+.bf-options--pair {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@container bf (min-width: 520px) {
+  .bf-options--grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.bf .bf-choice {
+  min-height: 54px;
+}
+
+.bf-choice .choice__text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Selected option: a cobalt edge in addition to the filled radio. */
+.bf-choice:has(input:checked) {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.bf-choice:active {
+  transform: scale(0.99);
+}
+
+.bf .bf-clear {
+  justify-self: start;
+  min-height: 44px;
+  padding: 0 4px;
+  color: var(--accent-text);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.bf .bf-textarea {
+  min-height: 168px;
+}
+
+.bf-count {
+  justify-self: end;
+  color: var(--muted);
+  letter-spacing: 0.14em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.bf-count[data-over='true'] {
+  color: var(--danger);
+}
+
+/* Errors and the "range cleared" notice arrive with a small settle, never hidden by it. */
+@keyframes bf-settle {
+  from {
+    opacity: 0.25;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.bf .field__error,
+.bf-cleared {
+  animation: bf-settle 0.32s var(--ease-out) both;
+}
+
+.bf-cleared {
+  font-size: 0.86rem;
+}
+
+/* ---------- Step actions ---------- */
+.bf-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+.bf-actions .btn {
+  width: 100%;
+  padding-block: 10px;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.bf-actions__main {
+  grid-column: 1 / -1;
+}
+
+.bf-reset[data-armed='true'] {
+  border-color: currentColor;
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.bf-reset__hint {
+  grid-column: 1 / -1;
+  color: var(--danger);
+  font-size: 0.86rem;
+}
+
+@container bf (min-width: 560px) {
+  .bf-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .bf-actions .btn {
+    width: auto;
+    min-width: 128px;
+  }
+
+  .bf-push {
+    margin-left: auto;
+  }
+
+  .bf-reset__hint {
+    flex-basis: 100%;
+    text-align: right;
+  }
+}
+
+/* ---------- Step 3 sections ---------- */
+.bf-section {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.bf-section__head {
+  display: grid;
+  gap: 6px;
+}
+
+.bf-section__title {
+  font-size: 1.3rem;
+  font-weight: 680;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+}
+
+.bf-details {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+@container bf (min-width: 640px) {
+  .bf-details {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ---------- Review ---------- */
+.bf-review {
+  display: grid;
+  border-top: 1px solid var(--line-strong);
+}
+
+.bf-review__group {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px 0 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.bf-review__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.bf-review__title {
+  margin: 0;
+  color: var(--muted);
+  letter-spacing: 0.2em;
+}
+
+.bf .bf-edit {
+  margin-right: -10px;
+  color: var(--accent-text);
+  font-weight: 620;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.bf-review__list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+
+.bf-review__row {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.bf-review__row dt {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.bf-review__row dd {
+  min-width: 0;
+  font-size: 0.98rem;
+  font-weight: 520;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.bf-review__row dd[data-empty='true'] {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+@container bf (min-width: 600px) {
+  .bf-review__row {
+    grid-template-columns: minmax(150px, 34%) minmax(0, 1fr);
+    align-items: baseline;
+    gap: 16px;
+  }
+}
+
+/* ---------- Export ---------- */
+.bf .bf-export {
+  gap: 16px;
+  padding: 20px 16px;
+  border-radius: 18px;
+  background:
+    radial-gradient(120% 70% at 100% 0%, rgba(50, 108, 255, 0.07), transparent 60%),
+    var(--surface-2);
+}
+
+@container bf (min-width: 560px) {
+  .bf .bf-export {
+    padding: 28px;
+  }
+}
+
+.bf-notice {
+  font-weight: 560;
+  line-height: 1.45;
+}
+
+.bf-notice__icon {
+  margin-top: 1px;
+  color: var(--accent-text);
+}
+
+.bf-icon {
+  flex: none;
+}
+
+.bf-export__actions {
+  display: grid;
+  gap: 10px;
+}
+
+.bf-export__actions .btn {
+  width: 100%;
+}
+
+@container bf (min-width: 480px) {
+  .bf-export__actions {
+    grid-template-columns: repeat(2, max-content);
+  }
+
+  .bf-export__actions .btn {
+    width: auto;
+  }
+}
+
+.bf-export__status {
+  color: var(--accent-text);
+  font-size: 0.9rem;
+  font-weight: 580;
+  overflow-wrap: anywhere;
+}
+
+.bf-export__status[data-kind='error'] {
+  color: var(--danger);
+}
+
+/* ---------- Text preview ---------- */
+.bf-preview {
+  border-top: 1px solid var(--line);
+  padding-top: 4px;
+}
+
+.bf-preview__summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  font-weight: 580;
+  cursor: pointer;
+  list-style: none;
+}
+
+.bf-preview__summary::-webkit-details-marker {
+  display: none;
+}
+
+.bf-preview__summary::before {
+  content: '';
+  flex: none;
+  width: 7px;
+  height: 7px;
+  margin: 0 2px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 0.25s var(--ease-out);
+}
+
+.bf-preview[open] > .bf-preview__summary::before {
+  transform: rotate(45deg);
+}
+
+.bf-preview__body {
+  display: grid;
+  gap: 12px;
+  padding: 6px 0 4px;
+}
+
+.bf-preview__text {
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-3);
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.bf-preview__copy {
+  justify-self: start;
+}
+
+/* ---------- Pointer and motion ---------- */
+@media (hover: hover) {
+  .bf .bf-edit:hover,
+  .bf .bf-clear:hover {
+    color: var(--text);
+  }
+}
+
+@media (pointer: coarse) {
+  .bf .bf-choice {
+    min-height: 56px;
+  }
+
+  .bf .bf-edit,
+  .bf .bf-clear,
+  .bf-preview__summary {
+    min-height: 48px;
+  }
+}
+
+/* Paused motion would freeze entrances at their first frame; show the final state instead. */
+:root[data-paused='true'] .bf *,
+:root[data-paused='true'] .bf *::before,
+:root[data-paused='true'] .bf *::after {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion='full']) .bf *,
+  :root:not([data-motion='full']) .bf *::before,
+  :root:not([data-motion='full']) .bf *::after {
+    animation: none !important;
+    transition-duration: 0.001ms !important;
+  }
+}

@@ -1,0 +1,51 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { EMPTY_BRIEF } from './briefModel';
+import {
+  INITIAL_BRIEF_STATE,
+  getBriefState,
+  resetBriefState,
+  setBriefStep,
+  subscribeBrief,
+  updateBriefData,
+} from './briefStore';
+
+beforeEach(() => resetBriefState());
+
+describe('briefStore', () => {
+  it('keeps answers and step after every subscriber leaves (navigating away and back)', () => {
+    const unsubscribe = subscribeBrief(() => undefined);
+    updateBriefData((data) => ({ ...data, projectType: 'app', goals: 'A field notebook.' }));
+    setBriefStep(2);
+    unsubscribe();
+
+    expect(getBriefState().step).toBe(2);
+    expect(getBriefState().data).toMatchObject({ projectType: 'app', goals: 'A field notebook.' });
+  });
+
+  it('notifies only on real changes', () => {
+    const listener = vi.fn();
+    const unsubscribe = subscribeBrief(listener);
+
+    setBriefStep(1); // already on step 1
+    updateBriefData((data) => data); // no edit
+    expect(listener).not.toHaveBeenCalled();
+
+    updateBriefData((data) => ({ ...data, name: 'Aiko' }));
+    setBriefStep(3);
+    expect(listener).toHaveBeenCalledTimes(2);
+    unsubscribe();
+  });
+
+  it('start over clears every answer and returns to step 1', () => {
+    updateBriefData((data) => ({ ...data, name: 'Aiko', currency: 'JPY', budgetRange: 'not-sure' }));
+    setBriefStep(3);
+    resetBriefState();
+    expect(getBriefState()).toBe(INITIAL_BRIEF_STATE);
+    expect(getBriefState().data).toEqual(EMPTY_BRIEF);
+  });
+
+  it('never exposes a mutable empty brief', () => {
+    expect(Object.isFrozen(EMPTY_BRIEF)).toBe(true);
+    expect(Object.isFrozen(INITIAL_BRIEF_STATE)).toBe(true);
+  });
+});

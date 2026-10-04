@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CATEGORIES, DUE_LABELS, PROJECTS, STATUSES, TASKS, type Task } from './workspaceData';
+import { CATEGORIES, DUE_LABELS, PROJECTS, STATUSES, TASKS, type Task, type TaskStatus } from './workspaceData';
 import {
   DEFAULT_FILTERS,
   activeFilterParts,
@@ -14,6 +14,7 @@ import {
   statusCounts,
   toCategoryFilter,
   toggleStatus,
+  type CategoryFilter,
   type WorkspaceFilters,
 } from './workspaceModel';
 
@@ -52,6 +53,99 @@ describe('sample data invariants', () => {
     for (const status of STATUSES) expect(TASKS.filter((t) => t.status === status).length).toBeGreaterThanOrEqual(3);
     for (const category of CATEGORIES) expect(TASKS.filter((t) => t.category === category).length).toBeGreaterThanOrEqual(3);
     for (const project of PROJECTS) expect(TASKS.filter((t) => t.project === project).length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('keeps titles single-spaced so the search highlight lines up with what matched', () => {
+    for (const task of TASKS) expect(normaliseQuery(task.title)).toBe(task.title.toLowerCase());
+  });
+});
+
+describe('filterTasks against an independent oracle', () => {
+  /** Every subset of statuses, in canonical order (16 subsets). */
+  const STATUS_SUBSETS: TaskStatus[][] = STATUSES.reduce<TaskStatus[][]>(
+    (subsets, status) => [...subsets, ...subsets.map((s) => [...s, status])],
+    [[]],
+  );
+  const CATEGORY_OPTIONS: CategoryFilter[] = ['all', ...CATEGORIES];
+  // Single-spaced queries only: the oracle deliberately does not collapse inner whitespace.
+  const QUERIES = ['', '   ', 'audit', '  COPY ', 'Design', 'e', 'focus', 'onboarding copy', 'zzz'];
+
+  const oracle = (task: Task, filters: WorkspaceFilters) => {
+    const q = filters.query.trim().toLowerCase();
+    return (
+      (q === '' || task.title.toLowerCase().includes(q)) &&
+      (filters.statuses.length === 0 || filters.statuses.includes(task.status)) &&
+      (filters.category === 'all' || task.category === filters.category)
+    );
+  };
+
+  it('returns exactly the tasks the oracle accepts, for every facet combination', () => {
+    let combinations = 0;
+    for (const statuses of STATUS_SUBSETS) {
+      for (const category of CATEGORY_OPTIONS) {
+        for (const query of QUERIES) {
+          const filters = f({ statuses, category, query });
+          expect(filterTasks(TASKS, filters)).toEqual(TASKS.filter((t) => oracle(t, filters)));
+
+          // Faceted counts agree with the result of narrowing that one facet.
+          const byStatus = statusCounts(TASKS, filters);
+          for (const s of STATUSES) expect(byStatus[s]).toBe(filterTasks(TASKS, { ...filters, statuses: [s] }).length);
+          const byCategory = categoryCounts(TASKS, filters);
+          for (const c of CATEGORIES) expect(byCategory[c]).toBe(filterTasks(TASKS, { ...filters, category: c }).length);
+
+          // OR within the status facet: picked chips' counts add up to the result size.
+          if (statuses.length > 0) {
+            expect(statuses.reduce((n, s) => n + byStatus[s], 0)).toBe(filterTasks(TASKS, filters).length);
+          }
+          combinations += 1;
+        }
+      }
+    }
+    expect(combinations).toBe(16 * 5 * QUERIES.length);
+  });
+
+  it('highlights a match in every task the search returns', () => {
+    for (const query of QUERIES.filter((q) => normaliseQuery(q) !== '')) {
+      for (const task of filterTasks(TASKS, f({ query }))) {
+        const parts = highlightParts(task.title, query);
+        expect(parts.some((p) => p.match)).toBe(true);
+        expect(parts.map((p) => p.text).join('')).toBe(task.title);
+      }
+    }
+  });
+});
+
+describe('purity', () => {
+  it('never mutates the task list or the filters it is given', () => {
+    const tasks = Object.freeze(FIXTURE.map((t) => Object.freeze({ ...t })));
+    const filters: WorkspaceFilters = Object.freeze({
+      query: ' audit ',
+      statuses: Object.freeze(['Review', 'Done']) as readonly TaskStatus[],
+      category: 'all' as const,
+    });
+    const before = JSON.stringify({ tasks, filters });
+    // Frozen inputs make any in-place write (push, sort, assignment) throw.
+    expect(() => {
+      filterTasks(tasks, filters);
+      statusCounts(tasks, filters);
+      categoryCounts(tasks, filters);
+      groupByStatus(tasks);
+      toggleStatus(filters, 'Backlog');
+      describeFilters(filters);
+    }).not.toThrow();
+    expect(JSON.stringify({ tasks, filters })).toBe(before);
+  });
+
+  it('keeps the reset filters frozen, so a reset always restores the full list', () => {
+    expect(Object.isFrozen(DEFAULT_FILTERS)).toBe(true);
+    expect(Object.isFrozen(DEFAULT_FILTERS.statuses)).toBe(true);
+    expect(filterTasks(TASKS, DEFAULT_FILTERS)).toHaveLength(TASKS.length);
+  });
+
+  it('returns a new array even when nothing is filtered out', () => {
+    const result = filterTasks(TASKS, DEFAULT_FILTERS);
+    expect(result).not.toBe(TASKS);
+    expect(result).toEqual([...TASKS]);
   });
 });
 
@@ -277,5 +371,10 @@ describe('highlightParts', () => {
   it('returns the whole title unmarked for an empty query or no match', () => {
     expect(highlightParts('Draft copy', '  ')).toEqual([{ text: 'Draft copy', match: false }]);
     expect(highlightParts('Draft copy', 'zzz')).toEqual([{ text: 'Draft copy', match: false }]);
+  });
+
+  it('does not slice at the wrong place when lower-casing changes the title length', () => {
+    // "İ" lower-cases to two code units, so indexes in the lower-cased copy would drift.
+    expect(highlightParts('İcon audit', 'audit')).toEqual([{ text: 'İcon audit', match: false }]);
   });
 });

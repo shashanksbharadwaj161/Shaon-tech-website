@@ -131,7 +131,22 @@ export function alignCheckOut(prevCheckIn: string, prevCheckOut: string, nextChe
   if (parseISODate(nextCheckIn) === null || parseISODate(prevCheckOut) === null) return prevCheckOut;
   if (isStayLength(nightsBetween(nextCheckIn, prevCheckOut))) return prevCheckOut;
   const previous = parseISODate(prevCheckIn) === null ? 0 : nightsBetween(prevCheckIn, prevCheckOut);
-  return addDays(nextCheckIn, isStayLength(previous) ? previous : 1);
+  const aligned = addDays(nextCheckIn, isStayLength(previous) ? previous : 1);
+  // Past 9999-12-31 there is no 'YYYY-MM-DD' date to move to; never emit a malformed value.
+  return parseISODate(aligned) === null ? prevCheckOut : aligned;
+}
+
+/**
+ * The range the check-out picker should offer: from the night after check-in
+ * (never earlier than tomorrow) to MAX_NIGHTS after it. Without a usable
+ * check-in (blank, malformed or in the past) it spans every check-out that a
+ * valid check-in could still lead to.
+ */
+export function checkOutBounds(checkIn: string, today: string): { min: string; max: string } {
+  if (parseISODate(checkIn) !== null && nightsBetween(today, checkIn) >= 0) {
+    return { min: addDays(checkIn, 1), max: addDays(checkIn, MAX_NIGHTS) };
+  }
+  return { min: addDays(today, 1), max: addDays(today, MAX_DAYS_AHEAD + MAX_NIGHTS) };
 }
 
 /* ---------------------------------------------------------------------------
@@ -350,12 +365,23 @@ export function describeEmptyState(result: SearchResult, today: string): EmptySt
     };
   }
   const suggestion = suggestAlternative(result, today);
+  if (suggestion) {
+    return {
+      title: EMPTY_STATE_TITLE,
+      detail: `The nearest ${result.nights}-night stay with a free sample pavilion:`,
+      suggestion,
+    };
+  }
+  // The window starts after the requested check-in (not today) and is cut
+  // short by the one-year limit, so say exactly how far it looked.
+  const searchedDays = Math.min(SUGGESTION_WINDOW_DAYS, MAX_DAYS_AHEAD - nightsBetween(today, result.checkIn));
   return {
     title: EMPTY_STATE_TITLE,
-    detail: suggestion
-      ? `The nearest ${plural(result.nights, 'night')} with a free sample pavilion:`
-      : `Nothing fits in the next ${SUGGESTION_WINDOW_DAYS} days either. Try a shorter stay or fewer guests.`,
-    suggestion,
+    detail:
+      searchedDays > 0
+        ? `Nothing fits in the ${plural(searchedDays, 'day')} after this check-in either. Try a shorter stay or fewer guests.`
+        : 'This is the last check-in the one-year sample calendar allows. Try earlier dates, a shorter stay or fewer guests.',
+    suggestion: null,
   };
 }
 

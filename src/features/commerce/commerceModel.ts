@@ -171,6 +171,17 @@ export function removeLine(cart: Cart, id: string): Cart {
   return cart.some((l) => l.variantId === id) ? cart.filter((l) => l.variantId !== id) : cart;
 }
 
+/**
+ * Where focus should go after removing `id`'s line: the next line, else the
+ * previous one. `null` means the cart will be empty (focus the cart heading)
+ * or `id` has no line.
+ */
+export function focusAfterRemove(cart: Cart, id: string): VariantId | null {
+  const index = cart.findIndex((l) => l.variantId === id);
+  if (index === -1) return null;
+  return (cart[index + 1] ?? cart[index - 1])?.variantId ?? null;
+}
+
 export function lineTotalCents(line: CartLine): number {
   return unitPriceCents(line.variantId) * line.qty;
 }

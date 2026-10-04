@@ -10,6 +10,7 @@ import {
   PAVILIONS,
   addDays,
   alignCheckOut,
+  checkOutBounds,
   dayOfMonth,
   describeEmptyState,
   firstInvalidField,
@@ -270,9 +271,8 @@ export function StayDemo({ today }: { today?: string }) {
     [hint ? `${fieldIds[field]}-hint` : '', errors[field] ? `${fieldIds[field]}-error` : ''].filter(Boolean).join(' ') ||
     undefined;
 
-  const checkInValid = parseISODate(form.checkIn) !== null;
-  const checkOutMin = checkInValid ? addDays(form.checkIn, 1) : addDays(todayISO, 1);
-  const checkOutMax = checkInValid ? addDays(form.checkIn, MAX_NIGHTS) : addDays(todayISO, MAX_DAYS_AHEAD + MAX_NIGHTS);
+  // The picker never offers a past check-out, even while a typed check-in is in the past.
+  const checkOutRange = checkOutBounds(form.checkIn, todayISO);
 
   const resultsById = new Map(search?.result.pavilions.map((p) => [p.pavilion.id, p] as const));
   const suggestion = empty?.suggestion ?? null;
@@ -367,8 +367,8 @@ export function StayDemo({ today }: { today?: string }) {
                 className="input st-date"
                 type="date"
                 value={form.checkOut}
-                min={checkOutMin}
-                max={checkOutMax}
+                min={checkOutRange.min}
+                max={checkOutRange.max}
                 onChange={(e) => update('checkOut')(e.target.value)}
                 aria-invalid={errors.checkOut ? true : undefined}
                 aria-describedby={describedBy('checkOut', true)}

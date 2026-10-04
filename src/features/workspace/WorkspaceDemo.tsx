@@ -177,7 +177,7 @@ export function WorkspaceDemo() {
               />
             </div>
             <p className="field__hint" id={searchHintId}>
-              Matches words in task titles, in any letter case.
+              Matches any part of a task title, in any letter case.
             </p>
           </div>
 

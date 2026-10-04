@@ -10,6 +10,7 @@ import {
   describeRemove,
   EMPTY_CART,
   FINISHES,
+  focusAfterRemove,
   formatPrice,
   formatPriceDelta,
   getFinish,
@@ -115,11 +116,9 @@ export function CommerceDemo() {
   };
 
   const handleRemove = (id: VariantId) => {
-    const index = cart.findIndex((l) => l.variantId === id);
-    if (index === -1) return;
-    const neighbour = cart[index + 1] ?? cart[index - 1];
-    pendingFocus.current = neighbour ? neighbour.variantId : 'heading';
     const after = removeLine(cart, id);
+    if (after === cart) return;
+    pendingFocus.current = focusAfterRemove(cart, id) ?? 'heading';
     setCart(after);
     announce(describeRemove(after, id));
   };

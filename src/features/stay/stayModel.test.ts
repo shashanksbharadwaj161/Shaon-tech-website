@@ -1,19 +1,23 @@
 import { describe, expect, it } from 'vitest';
 import {
   EMPTY_STATE_TITLE,
+  MAX_DAYS_AHEAD,
   MAX_GUESTS,
   MAX_NIGHTS,
   PAVILIONS,
   SUGGESTION_WINDOW_DAYS,
   addDays,
   alignCheckOut,
+  checkOutBounds,
   describeEmptyState,
   firstInvalidField,
+  formatNight,
   formatRange,
   isNightBlocked,
   nightsBetween,
   parseISODate,
   searchAvailability,
+  stableHash,
   stayNights,
   suggestAlternative,
   summarizeAvailability,
@@ -117,6 +121,35 @@ describe('dates', () => {
         expect(validateSearch({ checkIn: nextCheckIn, checkOut, guests: 2 }, today).checkOut).toBeUndefined();
       }
     });
+
+    it('keeps the old check-out rather than emitting a malformed date past year 9999', () => {
+      // A typed year can reach 9999; the date after 9999-12-31 has no YYYY-MM-DD form.
+      expect(alignCheckOut('9999-12-28', '9999-12-30', '9999-12-31')).toBe('9999-12-30');
+      expect(parseISODate(alignCheckOut('9999-12-20', '9999-12-22', '9999-12-29'))).not.toBeNull();
+    });
+  });
+
+  describe('checkOutBounds', () => {
+    it('offers exactly the check-outs that validation accepts for a chosen check-in', () => {
+      const checkIn = addDays(TODAY, 20);
+      const { min, max } = checkOutBounds(checkIn, TODAY);
+      expect([min, max]).toEqual([addDays(checkIn, 1), addDays(checkIn, MAX_NIGHTS)]);
+      const checkOutError = (checkOut: string) => validateSearch({ checkIn, checkOut, guests: 2 }, TODAY).checkOut;
+      for (let d = min; d <= max; d = addDays(d, 1)) expect(checkOutError(d)).toBeUndefined();
+      expect(checkOutError(addDays(min, -1))).toBe('Check-out must be after check-in');
+      expect(checkOutError(addDays(max, 1))).toBe('Sample stays are limited to 14 nights');
+    });
+
+    it('allows check-in today', () => {
+      expect(checkOutBounds(TODAY, TODAY)).toEqual({ min: addDays(TODAY, 1), max: addDays(TODAY, MAX_NIGHTS) });
+    });
+
+    it('never offers a past check-out, even when the typed check-in is in the past', () => {
+      const wide = { min: addDays(TODAY, 1), max: addDays(TODAY, MAX_DAYS_AHEAD + MAX_NIGHTS) };
+      expect(checkOutBounds(addDays(TODAY, -20), TODAY)).toEqual(wide);
+      expect(checkOutBounds('', TODAY)).toEqual(wide);
+      expect(checkOutBounds('2026-02-30', TODAY)).toEqual(wide);
+    });
   });
 
   it('reads the visitor’s calendar date from local fields', () => {
@@ -140,6 +173,28 @@ describe('isNightBlocked', () => {
       const second = nights.map((d) => isNightBlocked(p.id, d));
       expect(second).toEqual(first);
     }
+  });
+
+  it('blocks a night exactly when the unsigned hash of "id:date" mod 100 is below 30', () => {
+    for (const p of PAVILIONS) {
+      for (const d of nights) {
+        const hash = stableHash(`${p.id}:${d}`);
+        // A signed hash would give negative remainders that always count as taken.
+        expect(Number.isInteger(hash) && hash >= 0 && hash <= 0xffffffff).toBe(true);
+        expect(isNightBlocked(p.id, d)).toBe(hash % 100 < 30);
+      }
+    }
+  });
+
+  it('keeps the same sample calendar for every visitor and release (pinned fortnight)', () => {
+    const fortnight = (id: PavilionId) =>
+      Array.from({ length: 14 }, (_, i) => (isNightBlocked(id, addDays('2026-10-01', i)) ? 'x' : '.')).join('');
+    expect(Object.fromEntries(PAVILIONS.map((p) => [p.id, fortnight(p.id)]))).toEqual({
+      garden: '.xxx.x...x..x.',
+      courtyard: '.x......x.....',
+      lookout: '.x.xxxxxx...xx',
+      long: 'x........x..xx',
+    });
   });
 
   it('takes roughly 30% of nights, independently per pavilion', () => {
@@ -191,6 +246,8 @@ describe('validateSearch', () => {
 
   it('limits check-in to 365 days ahead', () => {
     expect(validateSearch(stay(addDays(TODAY, 365), 2), TODAY)).toEqual({});
+    // The limit is on check-in only: a full-length stay may end past the horizon.
+    expect(validateSearch(stay(addDays(TODAY, 365), MAX_NIGHTS), TODAY)).toEqual({});
     expect(validateSearch(stay(addDays(TODAY, 366), 2), TODAY).checkIn).toBe('Choose a date within the next year');
     // Across a leap day the limit is still counted in days, not calendar years:
     // 2027-03-01 → 2028-03-01 is 366 days.
@@ -266,6 +323,16 @@ describe('searchAvailability', () => {
     expect(garden?.reasons[1]).toMatch(/^Taken on [1-3] of 3 sample nights$/);
   });
 
+  it('never mutates its input and reports trimmed dates', () => {
+    const checkIn = addDays(TODAY, 9);
+    const input = Object.freeze({ checkIn: ` ${checkIn} `, checkOut: addDays(checkIn, 3), guests: 2 });
+    const result = search(input);
+    expect(result.checkIn).toBe(checkIn);
+    expect(input.checkIn).toBe(` ${checkIn} `);
+    expect(() => suggestAlternative(input, TODAY)).not.toThrow();
+    expect(PAVILIONS.map((p) => p.sleeps)).toEqual([2, 4, 3, 6]);
+  });
+
   it('summarises counts with correct agreement', () => {
     expect(summarizeAvailability(2, 3, 2)).toBe('2 of 4 sample pavilions are free for 3 nights, 2 guests');
     expect(summarizeAvailability(1, 1, 1)).toBe('1 of 4 sample pavilions is free for 1 night, 1 guest');
@@ -320,7 +387,45 @@ describe('empty state and suggestions', () => {
   it('returns null when nothing in the 30-day window fits', () => {
     const requested = findStay(14, 6, (r) => r.availableCount === 0);
     expect(suggestAlternative(requested, TODAY)).toBeNull();
-    expect(describeEmptyState(requested, TODAY)?.detail).toMatch(/next 30 days/);
+    // The window is counted from the requested check-in, not from today.
+    expect(describeEmptyState(requested, TODAY)?.detail).toBe(
+      'Nothing fits in the 30 days after this check-in either. Try a shorter stay or fewer guests.',
+    );
+  });
+
+  it('describes only the days it could search when the one-year limit cuts the window short', () => {
+    // Near the horizon, find a request with no suggestion and check the stated window.
+    let found: { result: SearchResult; window: number } | null = null;
+    for (let offset = 336; offset < 365 && !found; offset += 1) {
+      for (let nights = 1; nights <= MAX_NIGHTS && !found; nights += 1) {
+        const result = search(stay(addDays(TODAY, offset), nights, 5));
+        const empty = describeEmptyState(result, TODAY);
+        if (empty && !empty.suggestion) found = { result, window: MAX_DAYS_AHEAD - offset };
+      }
+    }
+    if (!found) throw new Error('Expected an empty state without a suggestion near the horizon');
+    expect(found.window).toBeLessThan(SUGGESTION_WINDOW_DAYS);
+    expect(describeEmptyState(found.result, TODAY)?.detail).toBe(
+      `Nothing fits in the ${found.window} days after this check-in either. Try a shorter stay or fewer guests.`,
+    );
+
+    // At the last allowed check-in there is nothing later to search at all.
+    let last: SearchResult | null = null;
+    for (let nights = 1; nights <= MAX_NIGHTS && !last; nights += 1) {
+      const result = search(stay(addDays(TODAY, MAX_DAYS_AHEAD), nights, 5));
+      if (result.availableCount === 0) last = result;
+    }
+    if (!last) throw new Error('Expected a fully taken stay at the horizon');
+    expect(describeEmptyState(last, TODAY)).toEqual({
+      title: EMPTY_STATE_TITLE,
+      detail: 'This is the last check-in the one-year sample calendar allows. Try earlier dates, a shorter stay or fewer guests.',
+      suggestion: null,
+    });
+  });
+
+  it('introduces a suggestion by its stay length', () => {
+    const requested = findStay(5, 3, (r) => r.availableCount === 0);
+    expect(describeEmptyState(requested, TODAY)?.detail).toBe('The nearest 5-night stay with a free sample pavilion:');
   });
 
   it('never suggests a stay beyond the one-year horizon', () => {
@@ -335,5 +440,47 @@ describe('empty state and suggestions', () => {
 
   it('returns null for an invalid request', () => {
     expect(suggestAlternative({ checkIn: '', checkOut: '', guests: 2 }, TODAY)).toBeNull();
+  });
+});
+
+describe('time-zone independence', () => {
+  // 10:30 UTC on 1 Jan 2026 is already 2 Jan at UTC+14 and still 31 Dec at UTC−11.
+  const instant = new Date(Date.UTC(2026, 0, 1, 10, 30));
+  const zones = [
+    { zone: 'Pacific/Kiritimati', offset: -840, localDate: '2026-01-02' },
+    { zone: 'Pacific/Pago_Pago', offset: 660, localDate: '2025-12-31' },
+    { zone: 'Asia/Kathmandu', offset: -345, localDate: '2026-01-01' },
+    { zone: 'America/St_Johns', offset: 210, localDate: '2026-01-01' },
+  ];
+
+  // Everything the demo derives from dates, including spans over daylight-saving changes.
+  const fingerprint = () =>
+    JSON.stringify({
+      parsed: parseISODate('2026-03-29'),
+      added: [addDays('2026-03-28', 1), addDays('2026-10-24', 2), addDays('2026-11-01', 1), addDays('2028-02-28', 1)],
+      nights: [nightsBetween('2026-03-07', '2026-04-04'), nightsBetween('2026-10-24', '2026-11-02')],
+      stay: stayNights('2026-10-24', '2026-10-27'),
+      labels: [formatRange('2026-12-30', '2027-01-02'), formatNight('2026-03-29')],
+      horizon: validateSearch(stay(addDays(TODAY, MAX_DAYS_AHEAD), 2), TODAY),
+      summary: search(stay(addDays(TODAY, 40), 4, 3)).summary,
+      suggestion: suggestAlternative(findStay(5, 3, (r) => r.availableCount === 0), TODAY),
+    });
+
+  it('gives identical dates, labels and availability in every time zone; only "today" is local', (ctx) => {
+    // Node re-reads TZ when it changes. Typed locally: the app tsconfig has no Node types.
+    const env = (globalThis as unknown as { process: { env: Record<string, string | undefined> } }).process.env;
+    const original = env.TZ;
+    const baseline = fingerprint();
+    try {
+      for (const { zone, offset, localDate } of zones) {
+        env.TZ = zone;
+        ctx.skip(instant.getTimezoneOffset() !== offset, `This runtime cannot switch to ${zone}`);
+        expect(toLocalISODate(instant)).toBe(localDate);
+        expect(fingerprint()).toBe(baseline);
+      }
+    } finally {
+      if (original === undefined) delete env.TZ;
+      else env.TZ = original;
+    }
   });
 });
