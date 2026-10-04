@@ -55,7 +55,8 @@ export function MobileMenu({ open, active, onClose }: MobileMenuProps) {
       }
     };
     const mq = window.matchMedia('(min-width: 960px)');
-    const onWide = () => mq.matches && onClose(false);
+    // Widening past the menu breakpoint closes it; Header moves focus to the desktop nav.
+    const onWide = () => mq.matches && onClose(true);
     document.addEventListener('keydown', onKey);
     mq.addEventListener('change', onWide);
     return () => {

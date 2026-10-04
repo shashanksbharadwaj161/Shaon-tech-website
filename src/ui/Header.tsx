@@ -83,7 +83,14 @@ export function Header({ active }: { active: SectionId | null }) {
     document.getElementById('main')?.removeAttribute('inert');
     document.querySelector('.site-footer')?.removeAttribute('inert');
     headerRef.current?.querySelector('.site-header__inner')?.removeAttribute('inert');
-    if (restoreFocus) requestAnimationFrame(() => toggleRef.current?.focus());
+    if (restoreFocus)
+      requestAnimationFrame(() => {
+        // Back to the Menu button; if the viewport widened, it is hidden, so
+        // continue in the desktop nav instead of dropping focus to the page.
+        const toggle = toggleRef.current;
+        const target = toggle && toggle.getClientRects().length > 0 ? toggle : headerRef.current?.querySelector<HTMLElement>('.site-nav a[href]');
+        target?.focus();
+      });
   }, []);
 
   return (

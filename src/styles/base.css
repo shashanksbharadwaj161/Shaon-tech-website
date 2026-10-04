@@ -976,6 +976,14 @@ html[data-motion='reduced'] .mobile-menu * {
   border-color: var(--ice);
 }
 
+/* Desktop pill: draw the focus ring inside it, on its dark glass, so it keeps
+   contrast over paper sections too. */
+@media (min-width: 960px) {
+  .motion-toggle:focus-visible {
+    outline-offset: -5px;
+  }
+}
+
 .motion-toggle__glyph {
   display: grid;
   place-items: center;
