@@ -682,6 +682,8 @@
   position: absolute;
   inset: 0;
   display: grid;
+  /* A definite row so the mark's percentage height resolves (short phone preview). */
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
   place-items: center;
 }
 
@@ -779,12 +781,67 @@
       'controls';
   }
 
-  .lab__viewport {
-    position: relative;
-    top: auto;
-    margin: 0 calc(var(--gutter) * -0.5);
-    border-radius: 24px;
+  /* Phones: the same viewport becomes a compact sticky preview above the
+     controls, so every adjustment is visible while tuning. It is bounded by
+     the Lab section, so it releases before Process. One canvas, CSS only. */
+  .lab {
+    --lab-preview-h: clamp(170px, 34svh, 300px);
+    /* A flex column (not grid) so the sticky preview is bounded by the whole
+       Lab section rather than by its own grid row. */
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 28px;
   }
+
+  .lab__viewport {
+    position: sticky;
+    top: calc(var(--header-h) + 14px);
+    z-index: 2;
+    height: var(--lab-preview-h);
+    aspect-ratio: auto;
+    max-height: none;
+    margin: 0 calc(var(--gutter) * -0.5);
+    border-radius: 22px;
+    /* The first shadow caps the strip between the glass bar and the stuck
+       preview so sliders do not peek through; it stays within the 28px gap
+       above the preview when it is not stuck. */
+    box-shadow:
+      0 -20px 0 6px var(--ink),
+      0 18px 30px -18px rgba(0, 0, 0, 0.95);
+  }
+
+  .lab__hint {
+    font-size: 0.56rem;
+    bottom: 10px;
+    left: 12px;
+  }
+
+  .lab__controls {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+/* Short landscape phones: preview and controls side by side. */
+@media (max-width: 959px) and (orientation: landscape) and (max-height: 520px) {
+  .lab {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    grid-template-areas:
+      'copy copy'
+      'view controls';
+    --lab-preview-h: calc(100svh - var(--header-h) - 34px);
+  }
+
+  .lab__viewport {
+    position: sticky;
+    top: calc(var(--header-h) + 14px);
+    height: var(--lab-preview-h);
+    aspect-ratio: auto;
+    margin: 0;
+  }
+
 }
 
 /* ---------- PROCESS (pinned, scroll-linked) ---------- */

@@ -147,6 +147,35 @@ export function Lab() {
     };
   }, []);
 
+  // Phones: the preview is sticky above the controls. Browsers scroll a
+  // focused control into view without knowing about that overlay, so nudge
+  // it just below the preview (keyboard / switch / screen-reader focus).
+  useEffect(() => {
+    const el = viewport.current;
+    const form = el?.parentElement?.querySelector('.lab__controls');
+    if (!el || !form) return;
+    let raf = 0;
+    const onFocus = (e: Event) => {
+      const target = (e.target as Element).closest('.lab__control, .lab__actions');
+      if (!target) return;
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        if (getComputedStyle(el).position !== 'sticky') return;
+        const v = el.getBoundingClientRect();
+        const t = target.getBoundingClientRect();
+        if (t.left >= v.right || t.right <= v.left) return; // side by side (landscape)
+        const gap = 14;
+        const dy = t.top < v.bottom + gap ? t.top - (v.bottom + gap) : t.bottom > innerHeight - gap ? t.bottom - (innerHeight - gap) : 0;
+        if (dy) window.scrollBy({ top: dy, behavior: 'instant' });
+      });
+    };
+    form.addEventListener('focusin', onFocus);
+    return () => {
+      cancelAnimationFrame(raf);
+      form.removeEventListener('focusin', onFocus);
+    };
+  }, []);
+
   const useWebGL = renderer === 'webgl' && !failed;
   const running = animate && !localPause;
   const still = reduced || !useWebGL;
