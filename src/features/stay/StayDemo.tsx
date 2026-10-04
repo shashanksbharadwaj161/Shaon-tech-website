@@ -9,6 +9,7 @@ import {
   MIN_GUESTS,
   PAVILIONS,
   addDays,
+  alignCheckOut,
   dayOfMonth,
   describeEmptyState,
   firstInvalidField,
@@ -63,6 +64,30 @@ function previewNights(form: FormState): number | null {
   if (parseISODate(form.checkIn) === null || parseISODate(form.checkOut) === null) return null;
   const nights = nightsBetween(form.checkIn, form.checkOut);
   return nights > 0 ? nights : null;
+}
+
+/** Whether the form no longer matches the search whose results are on screen. */
+const formDiffers = (form: FormState, result: SearchResult) =>
+  form.checkIn.trim() !== result.checkIn ||
+  form.checkOut.trim() !== result.checkOut ||
+  Number(form.guests) !== result.guests;
+
+const motionAllowed = () => {
+  const root = document.documentElement.dataset;
+  return root.motion !== 'reduced' && root.paused !== 'true';
+};
+
+/**
+ * On a single-column (phone) layout the results sit below the form, so a
+ * successful check would otherwise change nothing on screen. Bring the
+ * results into view, but only when the summary is not already visible.
+ */
+function revealIfHidden(summary: HTMLElement | null, target: HTMLElement | null) {
+  if (!summary || !target) return;
+  const header = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 72;
+  const box = summary.getBoundingClientRect();
+  if (box.top >= header && box.bottom <= window.innerHeight) return;
+  target.scrollIntoView({ block: 'start', behavior: motionAllowed() ? 'smooth' : 'auto' });
 }
 
 function NightStrip({ nights, name, dim }: { nights: NightStatus[]; name: string; dim: boolean }) {
@@ -174,8 +199,18 @@ export function StayDemo({ today }: { today?: string }) {
   const checkInRef = useRef<HTMLInputElement>(null);
   const checkOutRef = useRef<HTMLInputElement>(null);
   const guestsRef = useRef<HTMLSelectElement>(null);
+  const resultsHeadRef = useRef<HTMLDivElement>(null);
   const resultsHeadingRef = useRef<HTMLHeadingElement>(null);
+  const summaryRef = useRef<HTMLParagraphElement>(null);
   const focusTick = useRef(0);
+  /** Set by a submitted search; consumed once the new results have rendered. */
+  const revealPending = useRef(false);
+
+  useEffect(() => {
+    if (!search || !revealPending.current) return;
+    revealPending.current = false;
+    revealIfHidden(summaryRef.current, resultsHeadRef.current);
+  }, [search]);
 
   // Focus after React has rendered the error text, so the description is read with the field.
   useEffect(() => {
@@ -199,7 +234,7 @@ export function StayDemo({ today }: { today?: string }) {
   const empty = useMemo(() => (search ? describeEmptyState(search.result, todayISO) : null), [search, todayISO]);
   const lengthNights = previewNights(form);
 
-  const runSearch = (input: SearchInput): boolean => {
+  const runSearch = (input: SearchInput, reveal: boolean): boolean => {
     const outcome = searchAvailability(input, todayISO);
     if (!outcome.ok) {
       setShowErrors(true);
@@ -208,22 +243,28 @@ export function StayDemo({ today }: { today?: string }) {
       return false;
     }
     setShowErrors(false);
+    revealPending.current = reveal;
     setSearch((previous) => ({ result: outcome.result, id: (previous?.id ?? 0) + 1 }));
     return true;
   };
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    runSearch(toInput(form));
+    // Focus stays on the button (so it can be pressed again); the summary is announced politely.
+    runSearch(toInput(form), true);
   };
 
   const trySuggestion = (suggestion: Suggestion) => {
     setForm({ checkIn: suggestion.checkIn, checkOut: suggestion.checkOut, guests: String(suggestion.guests) });
     // The suggest button disappears with the empty state; keep focus on the new results.
-    if (runSearch(suggestion)) requestFocus('results');
+    if (runSearch(suggestion, false)) requestFocus('results');
   };
 
-  const update = (field: keyof FormState) => (value: string) => setForm((f) => ({ ...f, [field]: value }));
+  const update = (field: 'checkOut' | 'guests') => (value: string) => setForm((f) => ({ ...f, [field]: value }));
+
+  // Moving check-in past check-out (or more than the limit before it) carries check-out along.
+  const updateCheckIn = (value: string) =>
+    setForm((f) => ({ ...f, checkIn: value, checkOut: alignCheckOut(f.checkIn, f.checkOut, value) }));
 
   const describedBy = (field: SearchField, hint: boolean) =>
     [hint ? `${fieldIds[field]}-hint` : '', errors[field] ? `${fieldIds[field]}-error` : ''].filter(Boolean).join(' ') ||
@@ -235,6 +276,7 @@ export function StayDemo({ today }: { today?: string }) {
 
   const resultsById = new Map(search?.result.pavilions.map((p) => [p.pavilion.id, p] as const));
   const suggestion = empty?.suggestion ?? null;
+  const stale = search !== null && formDiffers(form, search.result);
 
   return (
     <section className="st theme-ink" aria-labelledby={headingId}>
@@ -301,7 +343,7 @@ export function StayDemo({ today }: { today?: string }) {
                 value={form.checkIn}
                 min={todayISO}
                 max={addDays(todayISO, MAX_DAYS_AHEAD)}
-                onChange={(e) => update('checkIn')(e.target.value)}
+                onChange={(e) => updateCheckIn(e.target.value)}
                 aria-invalid={errors.checkIn ? true : undefined}
                 aria-describedby={describedBy('checkIn', true)}
               />
@@ -392,19 +434,26 @@ export function StayDemo({ today }: { today?: string }) {
         </form>
 
         <div className="st-results">
-          <div className="st-results__head">
+          <div className="st-results__head" ref={resultsHeadRef}>
             <h4 id={resultsHeadingId} ref={resultsHeadingRef} tabIndex={-1} className="st-results__title">
               Sample pavilions
             </h4>
             {search && (
               <p className="mono st-results__query">
+                <span className="visually-hidden">Showing </span>
                 {formatRange(search.result.checkIn, search.result.checkOut)} · {plural(search.result.nights, 'night')} ·{' '}
                 {plural(search.result.guests, 'guest')}
               </p>
             )}
+            {stale && (
+              <p className="st-stale">
+                <span className="st-stale__dot" aria-hidden="true" />
+                Dates or guests changed — check again to update
+              </p>
+            )}
           </div>
 
-          <p className="st-summary" role="status" aria-live="polite" aria-atomic="true">
+          <p ref={summaryRef} className="st-summary" role="status" aria-live="polite" aria-atomic="true">
             {search ? (
               <span key={search.id} className="value-pop">
                 {search.result.summary}.

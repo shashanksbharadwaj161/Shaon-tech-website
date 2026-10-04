@@ -117,6 +117,23 @@ export function stayNights(checkIn: string, checkOut: string): string[] {
   return Array.from({ length: Math.max(0, count) }, (_, i) => addDays(checkIn, i));
 }
 
+const isStayLength = (nights: number) => nights >= 1 && nights <= MAX_NIGHTS;
+
+/**
+ * The check-out to keep after the visitor moves check-in from `prevCheckIn`
+ * to `nextCheckIn`. A check-out that still makes a valid stay is left alone;
+ * one that no longer does (on or before the new check-in, or more than
+ * MAX_NIGHTS after it) moves with check-in, keeping the previous stay length
+ * (one night when there was no valid previous length). A blank or malformed
+ * check-out is never invented or changed.
+ */
+export function alignCheckOut(prevCheckIn: string, prevCheckOut: string, nextCheckIn: string): string {
+  if (parseISODate(nextCheckIn) === null || parseISODate(prevCheckOut) === null) return prevCheckOut;
+  if (isStayLength(nightsBetween(nextCheckIn, prevCheckOut))) return prevCheckOut;
+  const previous = parseISODate(prevCheckIn) === null ? 0 : nightsBetween(prevCheckIn, prevCheckOut);
+  return addDays(nextCheckIn, isStayLength(previous) ? previous : 1);
+}
+
 /* ---------------------------------------------------------------------------
    Deterministic sample availability
    ------------------------------------------------------------------------- */

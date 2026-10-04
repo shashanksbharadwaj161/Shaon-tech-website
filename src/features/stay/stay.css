@@ -139,10 +139,22 @@
     gap: 40px;
   }
 
-  .st-form {
-    position: sticky;
-    top: calc(var(--header-h) + 16px);
+  /* Sticky only when the whole form fits below the fixed header; otherwise
+     its button and note could sit off-screen while it is pinned. */
+  @media (min-height: 900px) {
+    .st-form {
+      position: sticky;
+      top: calc(var(--header-h) + 16px);
+    }
   }
+}
+
+/* Focus moves (invalid field, results) and the post-check reveal must land
+   clear of the fixed glass header. */
+.st .input,
+.st .select,
+.st-results__head {
+  scroll-margin-top: calc(var(--header-h) + 20px);
 }
 
 /* ---------- Form ---------- */
@@ -305,6 +317,25 @@
   color: var(--accent-text);
 }
 
+.st-stale {
+  display: flex;
+  flex-basis: 100%;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+  font-size: 0.84rem;
+  line-height: 1.35;
+  animation: st-enter 0.3s var(--ease-out) backwards;
+}
+
+.st-stale__dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ice);
+}
+
 .st-summary {
   min-height: 1.4em;
   font-size: clamp(1.1rem, 1rem + 1.2cqi, 1.5rem);
@@ -459,7 +490,10 @@
   min-width: 0;
 }
 
-.st-badge {
+/* .st-badge also carries .value-pop (inline-block); the compound selector
+   keeps the flex layout whatever order the stylesheets load in. */
+.st-badge,
+.st-badge.value-pop {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -612,6 +646,7 @@
    when motion is paused, show everything in its final state instead. */
 html[data-paused='true'] .st-night__bar,
 html[data-paused='true'] .st-empty,
+html[data-paused='true'] .st-stale,
 html[data-paused='true'] .st-row__note,
 html[data-paused='true'] .st-row__reasons,
 html[data-paused='true'] .st .value-pop {

@@ -170,6 +170,13 @@
   justify-content: center;
 }
 
+/* Full 44px targets for touch. */
+@media (pointer: coarse) {
+  .cm-gallery__chip {
+    min-height: 44px;
+  }
+}
+
 /* ---------- Picker ---------- */
 .cm__buy {
   display: grid;
@@ -347,15 +354,26 @@
   color: var(--text);
   font-size: 1.25rem;
   line-height: 1;
+  /* Rapid repeat taps must step the value, not trigger double-tap zoom.
+     Panning and pinch-zoom stay native. */
+  touch-action: manipulation;
   transition:
     background-color 0.2s,
     color 0.2s,
     transform 0.3s var(--ease-out);
 }
 
-.cm-stepper__btn:hover {
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
-  color: var(--accent-text);
+/* Hover tint only where hover is real, so it does not stick after a tap. */
+@media (hover: hover) {
+  .cm-stepper__btn:hover {
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    color: var(--accent-text);
+  }
+
+  .cm-stepper__btn[aria-disabled='true']:hover {
+    background: transparent;
+    color: var(--text);
+  }
 }
 
 .cm-stepper__btn:active {
@@ -365,11 +383,6 @@
 .cm-stepper__btn[aria-disabled='true'] {
   opacity: 0.36;
   cursor: not-allowed;
-}
-
-.cm-stepper__btn[aria-disabled='true']:hover {
-  background: transparent;
-  color: var(--text);
 }
 
 .cm-stepper__btn[aria-disabled='true']:active {

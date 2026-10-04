@@ -86,6 +86,12 @@ export function QuantityStepper({ id, value, decreaseLabel, increaseLabel, onReq
         }}
         onBlur={commitDraft}
         onKeyDown={onKeyDown}
+        // Some desktop browsers step a focused number input on mouse wheel and
+        // swallow the page scroll. Release focus first so the wheel scrolls the
+        // page natively and a cart quantity never changes by accident.
+        onWheel={(e) => {
+          if (e.currentTarget === document.activeElement) e.currentTarget.blur();
+        }}
       />
       <button
         type="button"

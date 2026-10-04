@@ -88,10 +88,11 @@ function orList(items: readonly string[]): string {
 }
 
 /**
- * A readable sentence of the active filters, e.g.
- * "Status: Review or Done · Category: Design · Search: “audit”".
+ * One readable phrase per active facet, always in the order status, category,
+ * search, e.g. ["Status: Review or Done", "Category: Design"]. Empty when nothing
+ * narrows the list (a whitespace-only query counts as nothing).
  */
-export function describeFilters(filters: WorkspaceFilters): string {
+export function activeFilterParts(filters: WorkspaceFilters): string[] {
   const parts: string[] = [];
   if (filters.statuses.length > 0) {
     const ordered = STATUSES.filter((s) => filters.statuses.includes(s));
@@ -100,6 +101,15 @@ export function describeFilters(filters: WorkspaceFilters): string {
   if (filters.category !== 'all') parts.push(`Category: ${filters.category}`);
   const query = displayQuery(filters.query);
   if (query !== '') parts.push(`Search: “${query}”`);
+  return parts;
+}
+
+/**
+ * A readable sentence of the active filters, e.g.
+ * "Status: Review or Done · Category: Design · Search: “audit”".
+ */
+export function describeFilters(filters: WorkspaceFilters): string {
+  const parts = activeFilterParts(filters);
   return parts.length > 0 ? parts.join(' · ') : 'No filters applied';
 }
 

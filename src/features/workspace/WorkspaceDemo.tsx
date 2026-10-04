@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState, type CSSProperties } from 
 import { CATEGORIES, STATUSES, TASKS, type Task, type TaskStatus } from './workspaceData';
 import {
   DEFAULT_FILTERS,
+  activeFilterParts,
   categoryCounts,
   describeFilters,
   filterTasks,
@@ -120,6 +121,7 @@ export function WorkspaceDemo() {
 
   const total = TASKS.length;
   const active = isFiltered(filters);
+  const filterParts = activeFilterParts(filters);
   const description = describeFilters(filters);
   const summary = resultSummary(visible.length, total);
   const announcement = useDebouncedValue(`${summary}. ${description}.`, ANNOUNCE_DELAY_MS);
@@ -138,7 +140,9 @@ export function WorkspaceDemo() {
     <section className="ws theme-ink" aria-labelledby={headingId}>
       <header className="ws-head">
         <div className="ws-head__bar">
-          <p className="mono ws-head__kicker">Workspace / All projects</p>
+          <p className="mono ws-head__kicker">
+            Workspace<span className="ws-head__crumb"> / All projects</span>
+          </p>
           <span className="sample-label">Sample data</span>
         </div>
         <h3 id={headingId} className="ws-head__title">
@@ -201,7 +205,7 @@ export function WorkspaceDemo() {
         <fieldset className="ws-facet" aria-describedby={statusHintId}>
           <legend className="field__label ws-facet__legend">Status</legend>
           <p className="field__hint" id={statusHintId}>
-            Pick any number. With none picked, every status shows.
+            Pick any number. None picked shows all.
           </p>
           <div className="ws-chips">
             {STATUSES.map((status) => {
@@ -261,7 +265,7 @@ export function WorkspaceDemo() {
             {columns.map((column) => {
               const columnHeadingId = `${uid}-col-${slug(column.status)}`;
               return (
-                <section key={column.status} className="ws-col" aria-labelledby={columnHeadingId}>
+                <div key={column.status} className="ws-col">
                   <h4 id={columnHeadingId} className="ws-col__head">
                     <StatusGlyph status={column.status} />
                     <span className="ws-col__name">{column.status}</span>
@@ -270,12 +274,13 @@ export function WorkspaceDemo() {
                       <span className="visually-hidden">{column.tasks.length === 1 ? ' task' : ' tasks'}</span>
                     </span>
                   </h4>
-                  <ul className="ws-cards">
+                  {/* role="list" keeps list semantics in Safari, where the base reset removes list-style. */}
+                  <ul className="ws-cards" role="list" aria-labelledby={columnHeadingId}>
                     {column.tasks.map((task, index) => (
                       <TaskCard key={task.id} task={task} query={filters.query} index={index} />
                     ))}
                   </ul>
-                </section>
+                </div>
               );
             })}
           </div>
@@ -283,10 +288,12 @@ export function WorkspaceDemo() {
           <div className="empty-state ws-empty">
             <p className="mono ws-empty__kicker">0 of {total}</p>
             <strong>No sample tasks match these filters</strong>
-            <p>
-              Nothing matches <span className="ws-empty__filters">{description}</span>. Remove a filter, or reset to
-              see all {total} sample tasks again.
-            </p>
+            <ul className="ws-empty__filters" role="list" aria-label="Active filters">
+              {filterParts.map((part) => (
+                <li key={part}>{part}</li>
+              ))}
+            </ul>
+            <p>Remove a filter, or reset to see all {total} sample tasks again.</p>
             {active && (
               <button type="button" className="btn btn--primary" onClick={reset}>
                 Reset filters

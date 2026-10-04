@@ -6,6 +6,7 @@ import {
   PAVILIONS,
   SUGGESTION_WINDOW_DAYS,
   addDays,
+  alignCheckOut,
   describeEmptyState,
   firstInvalidField,
   formatRange,
@@ -78,6 +79,44 @@ describe('dates', () => {
   it('lists each night of a half-open stay, excluding the check-out date', () => {
     expect(stayNights('2026-10-30', '2026-11-02')).toEqual(['2026-10-30', '2026-10-31', '2026-11-01']);
     expect(stayNights('2026-10-30', '2026-10-30')).toEqual([]);
+  });
+
+  describe('alignCheckOut', () => {
+    it('leaves a check-out that still makes a valid stay', () => {
+      expect(alignCheckOut('2026-10-12', '2026-10-15', '2026-10-13')).toBe('2026-10-15');
+      expect(alignCheckOut('2026-10-12', '2026-10-15', '2026-10-01')).toBe('2026-10-15'); // exactly 14 nights
+    });
+
+    it('moves a check-out that is no longer after check-in, keeping the stay length', () => {
+      expect(alignCheckOut('2026-10-12', '2026-10-15', '2026-10-15')).toBe('2026-10-18');
+      expect(alignCheckOut('2026-10-12', '2026-10-15', '2026-10-30')).toBe('2026-11-02');
+      expect(alignCheckOut('2028-02-26', '2028-02-28', '2028-02-28')).toBe('2028-03-01');
+    });
+
+    it('moves a check-out that would make the stay longer than the limit', () => {
+      expect(alignCheckOut('2026-10-12', '2026-10-15', '2026-09-30')).toBe('2026-10-03');
+    });
+
+    it('falls back to one night when there was no valid previous length', () => {
+      expect(alignCheckOut('', '2026-10-15', '2026-10-20')).toBe('2026-10-21');
+      expect(alignCheckOut('2026-10-15', '2026-10-15', '2026-10-15')).toBe('2026-10-16');
+      expect(alignCheckOut('2026-10-01', '2026-10-30', '2026-10-30')).toBe('2026-10-31');
+    });
+
+    it('never invents or changes a blank or malformed check-out, or reacts to a malformed check-in', () => {
+      expect(alignCheckOut('2026-10-12', '', '2026-10-20')).toBe('');
+      expect(alignCheckOut('2026-10-12', '2026-02-30', '2026-10-20')).toBe('2026-02-30');
+      expect(alignCheckOut('2026-10-12', '2026-10-15', '')).toBe('2026-10-15');
+    });
+
+    it('always yields a stay that passes the date-order and length rules', () => {
+      const today = '2026-10-03';
+      for (let offset = 0; offset < 60; offset += 1) {
+        const nextCheckIn = addDays(today, offset);
+        const checkOut = alignCheckOut(addDays(today, 10), addDays(today, 13), nextCheckIn);
+        expect(validateSearch({ checkIn: nextCheckIn, checkOut, guests: 2 }, today).checkOut).toBeUndefined();
+      }
+    });
   });
 
   it('reads the visitor’s calendar date from local fields', () => {

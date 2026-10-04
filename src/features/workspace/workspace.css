@@ -47,6 +47,13 @@
   color: var(--muted);
 }
 
+/* On phone-width demos the crumb would push the sample label onto its own row. */
+@container ws (max-width: 419px) {
+  .ws-head__crumb {
+    display: none;
+  }
+}
+
 .ws-head__title {
   font-size: clamp(1.6rem, 1.2rem + 2.4cqi, 2.2rem);
   font-weight: 700;
@@ -151,6 +158,14 @@
 
 .ws-chip[aria-pressed='true'] .ws-glyph {
   color: inherit;
+}
+
+/* Touch screens keep :hover after a tap; without this, a chip just switched
+   off would keep the accent border and still look half-selected. */
+@media (hover: none) {
+  .ws-chip:not([aria-pressed='true']):hover {
+    border-color: var(--line-strong);
+  }
 }
 
 /* ---------- Status glyphs ---------- */
@@ -415,8 +430,31 @@
 }
 
 .ws-empty__filters {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
   color: var(--text);
+}
+
+.ws-empty__filters li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
   overflow-wrap: anywhere;
+}
+
+.ws-empty__filters li::before {
+  content: '';
+  flex: none;
+  width: 12px;
+  height: 1px;
+  background: var(--accent-text);
+  transform: translateY(-0.32em);
 }
 
 /* ---------- Foot ---------- */

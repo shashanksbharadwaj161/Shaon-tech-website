@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { CATEGORIES, DUE_LABELS, PROJECTS, STATUSES, TASKS, type Task } from './workspaceData';
 import {
   DEFAULT_FILTERS,
+  activeFilterParts,
   categoryCounts,
   describeFilters,
   filterTasks,
@@ -178,6 +179,27 @@ describe('describeFilters', () => {
 
   it('keeps the original case of the search text', () => {
     expect(describeFilters(f({ query: 'Hero  Copy' }))).toBe('Search: “Hero Copy”');
+  });
+});
+
+describe('activeFilterParts', () => {
+  it('is empty for the reset filters and for a whitespace-only query', () => {
+    expect(activeFilterParts(DEFAULT_FILTERS)).toEqual([]);
+    expect(activeFilterParts(f({ query: ' \t ' }))).toEqual([]);
+  });
+
+  it('gives one phrase per active facet, in a fixed order whatever the selection order', () => {
+    expect(activeFilterParts(f({ query: 'copy', category: 'Content', statuses: ['Done', 'Backlog'] }))).toEqual([
+      'Status: Backlog or Done',
+      'Category: Content',
+      'Search: “copy”',
+    ]);
+    expect(activeFilterParts(f({ category: 'Research' }))).toEqual(['Category: Research']);
+  });
+
+  it('is what describeFilters reads back, joined', () => {
+    const filters = f({ query: 'audit', statuses: ['Review'] });
+    expect(describeFilters(filters)).toBe(activeFilterParts(filters).join(' · '));
   });
 });
 

@@ -397,8 +397,8 @@
   clip-path: inset(0 0 0 0);
   transform: none;
   transition:
-    clip-path 0.62s var(--ease-in-out),
-    transform 0.7s var(--ease-out);
+    clip-path 0.45s var(--ease-in-out),
+    transform 0.55s var(--ease-out);
 }
 
 .seq__chapter[data-state='before'] {
@@ -414,7 +414,7 @@
 }
 
 .seq__chapter[data-state='active'] {
-  transition-delay: 0.12s;
+  transition-delay: 0.08s;
 }
 
 .seq__kicker {
