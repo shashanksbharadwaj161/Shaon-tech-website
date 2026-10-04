@@ -7,6 +7,8 @@
  */
 import {
   BUDGET_HINT,
+  DETAILS_TITLE,
+  FIELD_LABELS,
   NOT_PROVIDED,
   budgetCurrency,
   projectTypeLabel,
@@ -106,20 +108,20 @@ export function buildBriefText(data: BriefData, createdAtISO: string): string {
     line('Delivery', brief.delivery),
     '',
     ...heading(stepTitle(1)),
-    line('What do you need?', brief.project.typeLabel),
-    'What should it achieve?',
+    line(FIELD_LABELS.projectType, brief.project.typeLabel),
+    FIELD_LABELS.goals,
     ...goals,
     '',
     ...heading(stepTitle(2)),
-    line('Budget currency', brief.budget.currency),
-    line('Budget range', brief.budget.rangeLabel),
-    line('Timing', brief.timing.label),
+    line(FIELD_LABELS.currency, brief.budget.currency),
+    line(FIELD_LABELS.budgetRange, brief.budget.rangeLabel),
+    line(FIELD_LABELS.timing, brief.timing.label),
     `Note: ${BUDGET_HINT}`,
     '',
-    ...heading('Your details'),
-    line('Name', brief.contact.name || null),
-    line('Email', brief.contact.email || null),
-    line('Company', brief.contact.company),
+    ...heading(DETAILS_TITLE),
+    line(FIELD_LABELS.name, brief.contact.name || null),
+    line(FIELD_LABELS.email, brief.contact.email || null),
+    line(FIELD_LABELS.company, brief.contact.company),
   ];
   return `${lines.join('\n')}\n`;
 }

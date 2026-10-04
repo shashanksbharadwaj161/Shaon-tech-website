@@ -43,6 +43,19 @@ export const STEPS: readonly { readonly step: Step; readonly title: string; read
 
 export const GOALS_MAX = 2000;
 export const NOT_PROVIDED = 'Not provided';
+export const DETAILS_TITLE = 'Your details';
+
+/** Visible labels, shared by the form, the review list and the text file so they always match. */
+export const FIELD_LABELS: Readonly<Record<BriefField, string>> = {
+  projectType: 'What do you need?',
+  goals: 'What should it achieve?',
+  currency: 'Budget currency',
+  budgetRange: 'Budget range',
+  timing: 'Timing',
+  name: 'Name',
+  email: 'Email',
+  company: 'Company',
+};
 export const BUDGET_HINT =
   'Budget ranges are only categories to help us understand scope — not rates, quotes or currency conversions.';
 
@@ -227,4 +240,53 @@ export function budgetCurrency(data: BriefData): Currency | null {
 
 export function stepTitle(step: Step): string {
   return STEPS[step - 1].title;
+}
+
+export interface ReviewItem {
+  readonly field: BriefField;
+  readonly label: string;
+  /** The answer as shown to the visitor, or null when it was left blank (shown as NOT_PROVIDED). */
+  readonly value: string | null;
+}
+
+export interface ReviewGroup {
+  /** The step the "Edit" action returns to. */
+  readonly step: Step;
+  readonly title: string;
+  readonly items: readonly ReviewItem[];
+}
+
+function answered(text: string): string | null {
+  const trimmed = text.replace(/\r\n?/g, '\n').trim();
+  return trimmed === '' ? null : trimmed;
+}
+
+/**
+ * Every answer, grouped by the step it was given on, exactly as the review
+ * list shows it. Mirrors the exported file: the currency only counts once a
+ * budget range has been chosen.
+ */
+export function reviewGroups(data: BriefData): readonly ReviewGroup[] {
+  const item = (field: BriefField, value: string | null): ReviewItem => ({ field, label: FIELD_LABELS[field], value });
+  return [
+    {
+      step: 1,
+      title: stepTitle(1),
+      items: [item('projectType', projectTypeLabel(data.projectType)), item('goals', answered(data.goals))],
+    },
+    {
+      step: 2,
+      title: stepTitle(2),
+      items: [
+        item('currency', budgetCurrency(data)),
+        item('budgetRange', rangeLabel(data.budgetRange)),
+        item('timing', timingLabel(data.timing)),
+      ],
+    },
+    {
+      step: 3,
+      title: DETAILS_TITLE,
+      items: [item('name', answered(data.name)), item('email', answered(data.email)), item('company', answered(data.company))],
+    },
+  ];
 }
