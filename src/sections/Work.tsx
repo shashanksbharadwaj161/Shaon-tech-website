@@ -55,7 +55,7 @@ export function Work() {
   const onProgress = useCallback((p: number) => {
     stage.current?.style.setProperty('--t', p.toFixed(3));
   }, []);
-  useScrollProgress(stage, onProgress, { kind: 'enter', start: 1, end: 0.25 }, reduced);
+  useScrollProgress(stage, onProgress, { kind: 'enter', start: 1.05, end: 0.62 }, reduced);
 
   useEffect(() => {
     const el = stage.current;

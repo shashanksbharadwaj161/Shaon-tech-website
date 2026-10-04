@@ -235,6 +235,13 @@ html[data-paused='true'] *::after {
   opacity: 1;
 }
 
+/* Over paper chapters the glass is denser, so white text stays ≥ 7:1. */
+.site-header[data-surface='paper'] .site-header__inner::before {
+  background:
+    linear-gradient(115deg, transparent 0%, rgba(138, 203, 255, 0.08) calc(var(--sheen) * 100% - 18%), rgba(244, 247, 251, 0.1) calc(var(--sheen) * 100%), transparent calc(var(--sheen) * 100% + 18%)),
+    linear-gradient(180deg, rgba(16, 21, 31, 0.9), rgba(7, 9, 13, 0.86));
+}
+
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .site-header__inner::before {
     background: rgba(11, 14, 21, 0.97);
@@ -912,6 +919,25 @@ html[data-paused='true'] *::after {
 }
 
 @media (max-width: 719px) {
+  /* Status only (nothing to press): a small dot that stays out of the way. */
+  .motion-toggle--status {
+    width: 28px;
+    min-height: 28px;
+    height: 28px;
+    padding: 0;
+    justify-content: center;
+    opacity: 0.85;
+  }
+
+  .motion-toggle--status .motion-toggle__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
   .motion-toggle:not(.motion-toggle--status) {
     padding: 0;
     width: 44px;
@@ -958,4 +984,13 @@ html[data-paused='true'] *::after {
   color: var(--ice);
   font: 11px/1.5 var(--font-mono);
   pointer-events: none;
+}
+
+/* The menu carries its own bar; fade the page header row out underneath it. */
+.site-header__inner {
+  transition: opacity 0.25s;
+}
+
+html.is-menu-open .site-header__inner {
+  opacity: 0;
 }

@@ -1,12 +1,25 @@
-# ShaOn Tech — website (Phase 1)
+# ShaOn Tech — website (Phase 2)
 
 Editorial / cinematic studio site for ShaOn Tech, built around the approved
 **Folded Signal** mark (logo direction A). React + TypeScript + Vite, with a
 real-time React Three Fiber scene and a complete SVG/CSS fallback.
 
-> Phase 1 is a review checkpoint: hero, the idea → product scroll story, and
-> honest landing sections for every nav destination. Full services, interactive
-> studio concepts, the material lab and the project brief are Phase 2.
+## Pages
+
+| Route | What it is |
+| --- | --- |
+| `/` | Hero → idea-to-product story → Services → Work → Lab → Process → Studio → brief lead-in |
+| `/work/product-workspace` | Studio concept: sample SaaS task workspace with search, status and category filters |
+| `/work/objects-commerce` | Studio concept: fictional capsule lamp, variants, editable sample cart (sample prices, no checkout) |
+| `/work/hospitality-stay` | Studio concept: fictional pavilion availability with validation (sample inventory, no booking) |
+| `/start-project` | Three-step project brief with local JSON / UTF-8 text download (nothing is sent) |
+| `/privacy` | What the site actually stores and sends (almost nothing) |
+| anything else | A useful not-found page |
+
+Routing uses the History API (real URLs, browser back/forward, per-page
+titles, focus moved to the new page, scroll restored on back). `pnpm dev` and
+`pnpm preview` serve deep links directly; a static host needs an SPA fallback
+that serves `index.html` for unknown paths.
 
 ## Run it
 
@@ -43,6 +56,36 @@ To exercise a **runtime** WebGL failure, open DevTools on a normal load and run:
 `document.querySelector('canvas').getContext('webgl2').getExtension('WEBGL_lose_context').loseContext()`
 — the stage switches to the fallback for the rest of the visit.
 
+## Concept media
+
+Concept renders are referenced from `public/media/` (see `src/content/media.ts`):
+`form-lamp-silver-{640,960,1680}.{avif,webp}` (largest file is 1254×1254) and
+`still-pavilion-blue-{640,960,1680}.{avif,webp}` (largest 1672×941). They are
+**not committed** — the media owner places them in a local preview. Each image is
+an AVIF/WebP `<picture>` with real dimensions, `loading="lazy"`,
+`decoding="async"` and a reserved aspect ratio; if a file is missing, a
+code-native drawing of the same fictional object stays in place, labelled as a
+stand-in. No video is referenced.
+
+## Lab defaults
+
+The Lab drives the hero's S directly. "Reset to defaults" restores: light angle
+40°, light intensity 1.00×, blue edge glow 0.55×, fold 100%, twist 0°, particle
+intensity 30%, flow speed 1.00× (`src/lib/labParams.ts`). Settings live only
+in memory. Dragging over the Lab (mouse or touch) optionally steers light and
+tilt; `touch-action: pan-y` keeps vertical page scrolling native.
+
+## Mobile
+
+Phone layouts are art-directed at 375 and 390 px rather than scaled: a
+floating liquid-glass nav pill (blur limited to the small bar; denser tint over
+paper sections; solid fallback without `backdrop-filter` or with
+`prefers-reduced-transparency`), a full-screen folded-panel menu built from the
+mark's 21.6° bands (no full-screen blur), swipeable Work panels, and touch on
+the hero S: finger position steers light and tilt with inertia, taps pulse the
+cobalt edge light, and native scroll velocity adds a restrained twist. All
+touch listeners are passive — nothing hijacks scrolling.
+
 ## Architecture
 
 ```
@@ -61,10 +104,15 @@ src/
   scene/        three.js only, lazy-loaded chunk:
                 ribbonGeometry, ribbonShader, signalParticles,
                 studioEnvironment, Experience (choreography), StageCanvas
-  sections/     Hero, Story (sequence + still version), Wireframe,
-                InterfacePreview, Work, Services, Lab, Studio, StartProject, Footer
-  ui/           Header, MobileMenu, CtaLink, MotionToggle, DebugReadout
-  styles/       tokens, base, stage, story, sections
+  sections/     Hero, Story (sequence + still version), Wireframe, InterfacePreview,
+                Services (+ OfferingGraphic), Work, Lab, Process, Studio, BriefLeadIn, Footer
+  pages/        HomePage, CasePage, StartProjectPage, PrivacyPage, NotFoundPage
+  router/       routes.ts (pure matching, titles, link classification), Router.tsx
+  features/     workspace/, commerce/, stay/, brief/ — each a self-contained
+                demo with a pure model and its own tests
+  ui/           Header, MobileMenu, CtaLink, MotionToggle, MediaImage,
+                ConceptDrawings, BriefPlanes, DebugReadout
+  styles/       tokens, base, stage, story, sections, controls, chapters, pages
 ```
 
 ### The mark
@@ -142,13 +190,16 @@ node --experimental-strip-types scripts/generate-favicon.ts   # Node ≥ 22.6
 
 `favicon-32.png` and `apple-touch-icon.png` are rasterised from that SVG.
 
-## Known limits (Phase 1)
+## Known limits
 
-- Work, Lab and Start a project are honest placeholders: studio concepts are
-  described but not yet interactive, and the brief builder is not built — the
-  page says so and sends nothing.
+- The brief cannot be sent: contact delivery is not connected. It can be
+  downloaded as JSON or UTF-8 text.
+- Studio concepts use sample data, sample prices and sample inventory; there is
+  no checkout, payment, booking or persistence.
 - `@react-three/fiber` 9.8 logs a `THREE.Clock` deprecation warning from inside
   the library; it is harmless.
-- Visual QA so far was done in headless Chromium with software WebGL
-  (SwiftShader) at 1440×900, 820×1180, 390×844 and 375×667. Real-device Safari /
-  iOS and GPU performance still need checking.
+- Visual QA was done in headless Chromium with software WebGL (SwiftShader)
+  and touch emulation at 1440×900, 820×1180, 390×844 and 375×667. Real-device
+  Safari / iOS, real touch hardware and GPU performance still need checking.
+- The concept renders were not available in the build environment, so their
+  in-page appearance was verified only through the fallback path and markup.

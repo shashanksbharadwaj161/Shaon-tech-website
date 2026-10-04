@@ -11,7 +11,7 @@ export function MotionToggle() {
     return (
       <p className="motion-toggle motion-toggle--status mono" role="status">
         <span className="motion-toggle__dot" aria-hidden="true" />
-        Reduced motion
+        <span className="motion-toggle__label">Reduced motion</span>
       </p>
     );
   }

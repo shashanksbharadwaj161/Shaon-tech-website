@@ -249,6 +249,7 @@
 .approach__link {
   display: inline-flex;
   align-items: center;
+  gap: 8px;
   min-height: 44px;
   padding: 0 18px;
   border-radius: 999px;
@@ -1180,12 +1181,14 @@
 
   .process__pin {
     grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto 1fr;
+    grid-template-rows: auto auto 1fr auto auto 1.4fr;
     grid-template-areas:
       'head'
       'rail'
+      '.'
       'stage'
-      'copy';
+      'copy'
+      '.';
     gap: 14px;
     padding: calc(var(--header-h) + 18px) 20px calc(28px + env(safe-area-inset-bottom));
   }

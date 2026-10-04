@@ -10,6 +10,36 @@ export function Header({ active }: { active: SectionId | null }) {
   const toggleRef = useRef<HTMLButtonElement>(null);
 
   const headerRef = useRef<HTMLElement>(null);
+
+  // Which surface is under the glass bar: paper sections get a denser tint so
+  // white text keeps high contrast; ink sections stay more translucent.
+  useEffect(() => {
+    const header = headerRef.current;
+    if (!header) return;
+    const over = new Set<Element>();
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) over.add(e.target);
+          else over.delete(e.target);
+        }
+        over.forEach((el) => {
+          if (!el.isConnected) over.delete(el); // sections from a previous route
+        });
+        header.dataset.surface = over.size > 0 ? 'paper' : 'ink';
+      },
+      { rootMargin: '0px 0px -92% 0px' },
+    );
+    const observeAll = () => document.querySelectorAll('.section--paper, .site-footer').forEach((el) => io.observe(el));
+    observeAll();
+    const mo = new MutationObserver(() => observeAll());
+    mo.observe(document.getElementById('main') ?? document.body, { childList: true, subtree: false });
+    return () => {
+      io.disconnect();
+      mo.disconnect();
+    };
+  }, []);
+
   useEffect(() => {
     let last = false;
     let raf = 0;
